@@ -314,30 +314,6 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-
-        // --- ハンバーガーメニューの開閉制御 ---
-        const menuBtn = document.getElementById('menu-toggle');
-        const sidebar = document.querySelector('.sidebar');
-    
-        if (menuBtn && sidebar) {
-            menuBtn.addEventListener('click', function() {
-                // サイドバーの表示・非表示を切り替え
-                sidebar.classList.toggle('active');
-                // ボタンの三本線を「X」にするためのクラス切り替え
-                menuBtn.classList.toggle('open');
-            });
-    
-            // スマホ時、メニュー内のリンクや外側をクリックしたら自動で閉じる
-            document.addEventListener('click', function(e) {
-                if (window.innerWidth <= 768) {
-                    // ボタン以外、かつサイドバーの外側をクリックした場合
-                    if (!sidebar.contains(e.target) && !menuBtn.contains(e.target) && sidebar.classList.contains('active')) {
-                        sidebar.classList.remove('active');
-                        menuBtn.classList.remove('open');
-                    }
-                }
-            });
-        }
         
         const tabLinks = document.querySelectorAll('.tab-link');
         const sections = document.querySelectorAll('.section');
