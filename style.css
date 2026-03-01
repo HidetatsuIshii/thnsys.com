@@ -740,62 +740,67 @@ ul { list-style: none; padding: 0; margin: 0; }
     transform: translateY(-50%) rotate(90deg); /* 90度回転して下向きに */
 }
 
-/* --- レスポンシブ：ハンバーガーメニュー設定 --- */
-
-/* 1. PCではボタンを隠す */
-.menu-btn {
-    display: none;
-}
-
+/* --- レスポンシブ対応（スマホ設定） --- */
 @media (max-width: 768px) {
-    /* 2. スマホ時：サイドバーを画面外（左側）へ隠す */
-    .sidebar {
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-        width: 280px; /* 幅を固定 */
-        z-index: 2000;
-    }
-
-    /* 3. スマホ時：サイドバーが開いた状態 */
-    .sidebar.active {
-        transform: translateX(0);
-    }
-
-    /* 4. スマホ時：メインコンテンツの余白をなくす */
-    .main-content {
-        margin-left: 0;
-        width: 100%;
-    }
-
-    /* 5. ハンバーガーボタンのデザイン */
+    /* ボタンを表示 */
     .menu-btn {
-        display: block; /* スマホで表示 */
+        display: block !important;
         position: fixed;
         top: 15px;
         left: 15px;
-        width: 40px;
-        height: 40px;
-        background: var(--primary-color);
+        width: 45px;
+        height: 45px;
+        background: #003366;
         border: none;
-        border-radius: 4px;
-        z-index: 2100;
+        border-radius: 5px;
+        z-index: 2001;
         cursor: pointer;
-        padding: 10px;
     }
 
-    /* 三本線の線自体のデザイン */
     .menu-btn span {
         display: block;
-        width: 100%;
-        height: 2px;
+        width: 25px;
+        height: 3px;
         background: #fff;
-        margin-bottom: 5px;
+        margin: 5px auto;
         transition: 0.3s;
     }
-    .menu-btn span:last-child { margin-bottom: 0; }
-    
-    /* ボタンが押された時の「X」印アニメーション（任意） */
-    .menu-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+
+    /* ボタンが開いている時の「X」印 */
+    .menu-btn.open span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
     .menu-btn.open span:nth-child(2) { opacity: 0; }
-    .menu-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .menu-btn.open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+    /* サイドバーを画面左外へ */
+    .sidebar {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 2000;
+        width: 260px;
+        box-shadow: none;
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+        box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+    }
+
+    /* メインコンテンツを全幅にする */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding-top: 60px; /* ボタンと被らないように少し下げる */
+    }
+
+    /* 詳細画面内のコンテナ幅調整 */
+    .container {
+        padding: 20px !important;
+    }
+    
+    .detail-view {
+        padding: 20px !important;
+    }
 }
