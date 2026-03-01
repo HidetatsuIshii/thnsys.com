@@ -44,12 +44,12 @@ document.write(`
     </div>
 
     <div style="padding: 0 20px; margin-bottom: 20px;">
-        <a href="https://forms.gle/948exTErX2JZjZjcA" target="_blank" style="display: block; background: #00aaff; color: #fff; text-align: center; padding: 12px 0; border-radius: 6px; font-weight: bold; font-size: 0.6rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">
+        <a href="https://forms.gle/948exTErX2JZjZjcA" target="_blank" style="display: block; background: #00aaff; color: #fff; text-align: center; padding: 12px 0; border-radius: 6px; font-weight: bold; font-size: 0.8rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">
             ✉️ 既存ソフト専用<br>お問い合わせフォーム
         </a>
     </div>
     <div style="padding: 0 20px; margin-bottom: 20px;">
-        <a href="https://forms.gle/Ehuu76fdSD3RBxqf6" target="_blank" style="display: block; background: #00aaff; color: #fff; text-align: center; padding: 12px 0; border-radius: 6px; font-weight: bold; font-size: 0.6rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">
+        <a href="https://forms.gle/Ehuu76fdSD3RBxqf6" target="_blank" style="display: block; background: #00aaff; color: #fff; text-align: center; padding: 12px 0; border-radius: 6px; font-weight: bold; font-size: 0.8rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">
             ✉️ こんな事できたらなぁ<br>願望フォーム
         </a>
     </div>
