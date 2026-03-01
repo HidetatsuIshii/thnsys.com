@@ -1,0 +1,55 @@
+document.write(`
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <h1 class="logo">
+            <a href="/"><img src="images/logo.png" alt="TOHO HOUSE NEXT"></a>
+        </h1>
+    </div>
+
+    <nav class="sidebar-nav">
+        <ul>
+            <li>
+                <a href="#" class="tab-link active">稼働中のシステム</a>
+                <ul class="submenu open">
+                    <li><a href="001_suumoquick.html">・SuumoQuick</a></li>
+                    <li><a href="002_multiquick.html">・MultiQuick</a></li>
+                    <li><a href="003_autobukkaku.html">・Auto物確</a></li>
+                    <li><a href="004_tohouploader.html">・東宝アップローダー</a></li>
+                    <li><a href="005_pdfcutter.html">・PDFCutter</a></li>
+                    <li><a href="006_kashikabackup.html">・KASHIKA自動バックアップ</a></li>
+                    <li><a href="007_kashikasummary.html">・KASHIKAデータ集計</a></li>
+                    <li><a href="008_voicecatch.html">・コエキャッチ</a></li>
+                    <li><a href="009_syslog.html">・シスろぐ</a></li>
+                    <li><a href="013_heyapin.html">・部屋ピン</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="#" class="tab-link">開発検討中</a>
+                <ul class="submenu open">
+                    <li><a href="010_automadorizu.html">・Auto間取り図</a></li>
+                    <li><a href="011_pecuronquick.html">・ペキュロンクイック</a></li>
+                    <li><a href="012_tohocopynote.html">・TohoCopyNote</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="sidebar-contact">
+        <p class="sc-label">システムに関するご相談</p>
+        <div class="sc-number">
+            <img src="images/telicon.png" width="28" height="28" alt="電話アイコン" style="vertical-align: middle;">
+            03-4330-4444
+        </div>
+    </div>
+
+    <div style="padding: 0 20px; margin-bottom: 20px;">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdiudRL0RKO8iXlA-ITugtBdkkOjMn_Zro2fA8vIKAqcXLmXg/viewform" target="_blank" style="display: block; background: #00aaff; color: #fff; text-align: center; padding: 12px 0; border-radius: 6px; font-weight: bold; font-size: 0.9rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">
+            ✉️ お問い合わせフォーム
+        </a>
+    </div>
+
+    <div class="sidebar-footer">
+    </div>
+</aside>
+`);

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto間取り図 詳細 | TOHO HOUSE NEXT</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="wrapper">
+        <script src="common_sidebar.js"></script>
+
+        <main class="main-content">
+            
+            <div class="container" style="padding-top: 40px;">
+                
+                <a href="/" class="back-btn">◀ 一覧に戻る</a>
+
+                <div class="detail-view" style="display: block; margin-top: 20px; border-left: 5px solid #ff9900;">
+                    <div class="detail-header">
+                        <span class="detail-category" style="background:#ff9900;">AI / 画像（開発中）</span>
+                        <h2 class="detail-title">Auto間取り図</h2>
+                        <div class="detail-meta">
+                            <span>間取り図作成の「コスト・時間・手間」をAIで解決</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-body">
+                        <!--
+                        <div class="feature-img-box">
+                            <img src="images/010_automadorizu/main_screen.png" alt="Auto間取り図 エディタ画面">
+                        </div>
+                        -->
+
+                        <h3>見込まれる効果</h3>
+                        <div class="effect-box" style="margin-bottom: 40px;">
+                            <p>💰 外注費：<strong>1件3,000円の外注費用を「無料」へ</strong></p>
+                            <p>⚡ 作成時間：<strong>「外注して1日」を、「自分で10分」へ短縮</strong></p>
+                            <p>🎨 品質向上：<strong>正確かつ統一感のある図面を誰でも作成可能</strong></p>
+                        </div>
+
+                        <h3>開発の背景・現状の課題</h3>
+                        <p>
+                            現場業務において、販売図面から間取り図を準備する作業は「手作業による膨大な手間」「外注によるコストとタイムラグ」「他社図面の流用リスク」といった多くの課題を抱えていました。<br>
+                            <strong>Auto間取り図</strong>は、これらを根本から解決するために開発された次世代のWebシステムです。最新のAI（物体検出・OCR）とSVG描画技術を組み合わせることで、業務の標準化と劇的な効率化を実現します。
+                        </p>
+
+                        <h3>主な機能（開発中の最新仕様）</h3>
+                        <div class="feature-card-list">
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">AIによる図面自動解析（マエストロ・エンジン）</h4>
+                                <p class="feature-desc">
+                                    アップロードされた販売図面から、壁、窓、ドアなどの構造をAIが瞬時に識別。建築士の思考を学習したロジックにより、壁の中心線を捉えた高精度な間取りデータを自動生成します。
+                                </p>
+                                <!--
+                                <div class="feature-img-box">
+                                    <img src="images/010_automadorizu/ai_trace.png" alt="AIによる自動トレース">
+                                </div>
+                                -->
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">高度なポリゴン自動生成ロジック</h4>
+                                <p class="feature-desc">
+                                    単なる画像のなぞり書きではなく、壁の接続性を論理的に解析して閉じたポリゴンを生成します。L字型や複雑な凹凸を持つ部屋も、AIが頂点をミリ単位で整列させ、きれいな図面へと仕上げます。
+                                </p>
+                                <!--
+                                <div class="feature-img-box">
+                                    <img src="images/010_automadorizu/polygon.png" alt="ポリゴン生成ロジック">
+                                </div>
+                                -->
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">直感的なブラウザ・エディター</h4>
+                                <p class="feature-desc">
+                                    AIが作成した図面を、ブラウザ上で簡単に微調整できます。ドラッグ＆ドロップによる要素移動、ショートカットキー（A/Sキー）による下絵プレビューの切り替えなど、操作性にも徹底的にこだわっています。
+                                </p>
+                                <!--
+                                <div class="feature-img-box">
+                                    <img src="images/010_automadorizu/editor_ui.png" alt="エディター操作画面">
+                                </div>
+                                -->
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">豊富な設備・方角パーツライブラリ</h4>
+                                <p class="feature-desc">
+                                    キッチン、浴室、トイレなどの水回りから、ソファ、ベッド、さらには様々なデザインの方角記号まで、実務に必要なパーツを多数収録。スタンプ感覚で配置し、図面の完成度を高められます。
+                                </p>
+                                <!--
+                                <div class="feature-img-box">
+                                    <img src="images/010_automadorizu/parts.png" alt="パーツライブラリ">
+                                </div>
+                                -->
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">ワンクリック画像出力・履歴管理</h4>
+                                <p class="feature-desc">
+                                    完成した図面はPNGやPDF形式で即座に保存可能。作成履歴はクラウド上に保存されるため、後からの再編集や検索もスムーズに行うことができます。
+                                </p>
+                                <!--
+                                <div class="feature-img-box">
+                                    <img src="images/010_automadorizu/export_history.png" alt="履歴管理画面">
+                                </div>
+                                -->
+                            </div>
+
+                        </div>
+
+                        <div class="detail-meta" style="margin-top: 40px; color: #ff9900; font-weight: bold;">
+                            <span>📝 開発状況：基礎機能は完成済、AIの読取精度がまだ30%程度なので90%目標で改修中</span>
+                        </div>
+
+                        <div style="text-align:center; margin-top:50px; margin-bottom: 50px;">
+                            <a href="/" class="back-btn">◀ 一覧に戻る</a>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>コエキャッチ 詳細 | TOHO HOUSE NEXT</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="wrapper">
+        <script src="common_sidebar.js"></script>
+
+        <main class="main-content">
+            
+            <div class="container" style="padding-top: 40px;">
+                
+                <a href="/" class="back-btn">◀ 一覧に戻る</a>
+
+                <div class="detail-view" style="display: block; margin-top: 20px;">
+                    <div class="detail-header">
+                        <span class="detail-category">AI活用支援システム</span>
+                        <h2 class="detail-title">コエキャッチ</h2>
+                        <div class="detail-meta">
+                            <span>会議音声の即時共有と議事録作成の自動化支援</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-body">
+                        <div class="feature-img-box">
+                            <img src="images/008_voicecatch/main_screen.png" alt="コエキャッチ メイン画面">
+                        </div>
+
+                        <h3>導入効果</h3>
+                        <div class="effect-box" style="margin-bottom: 40px;">
+                            <p>📝 議事録作成：<strong>ボタンを押すだけで録音から共有まで完結し、作成負担を激減</strong></p>
+                            <p>💡 情報資産化：<strong>話し合った内容を余すことなく記録し、チームの知財として蓄積</strong></p>
+                            <p>🤖 AI連携：<strong>Slack経由でAIへ渡すことで、要約やタスク抽出が容易に</strong></p>
+                        </div>
+
+                        <h3>開発の背景・概要</h3>
+                        <p>
+                            日々の会議や打ち合わせにおいて、重要な決定事項やアイデアが記録漏れによって失われることは大きな損失です。また、手動での議事録作成には多大な時間がかかっていました。<br>
+                            <strong>コエキャッチ</strong>は、AI技術をより身近に活用するための第一歩として開発されました。録音、MP3変換、Slackへの自動送信をワンストップで行うことで、「忘れることのない状態」を瞬時に作り出し、生産性を劇的に向上させます。
+                        </p>
+
+                        <h3>主な機能</h3>
+                        <div class="feature-card-list">
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">ワンクリック・シンプル録音</h4>
+                                <p class="feature-desc">
+                                    迷うことのない単一ボタン設計。クリック一つで録音を開始し、再度クリックするだけで停止します。録音中はステータスが赤く表示され、一目で動作状況を確認できます。
+                                </p>
+                                <div class="feature-img-box">
+                                    <img src="images/008_voicecatch/recording_ui.png" alt="録音インターフェース">
+                                </div>
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">Slackへの自動ファイル送信</h4>
+                                <p class="feature-desc">
+                                    録音停止後、バックグラウンドで即座に指定のSlackチャンネルへ音声ファイルをアップロードします。チームメンバーへの共有や、スマホからの聞き直しが非常にスムーズに行えます。
+                                </p>
+                                <div class="feature-img-box">
+                                    <img src="images/008_voicecatch/slack_integration.png" alt="Slack送信機能">
+                                </div>
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">MP3自動圧縮・高速変換</h4>
+                                <p class="feature-desc">
+                                    高品質なWAV形式で録音した後、ffmpegエンジンを用いて軽量なMP3形式へ自動変換します。音質を保ちつつファイルサイズを抑えることで、スムーズな送信とストレージの節約を両立しています。
+                                </p>
+                                <div class="feature-img-box">
+                                    <img src="images/008_voicecatch/conversion_process.png" alt="変換プロセス">
+                                </div>
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">録音データのローカル管理</h4>
+                                <p class="feature-desc">
+                                    Slackへの送信だけでなく、PC内の専用フォルダ（recdata）にも日付・時刻付きのファイル名でデータを保存します。ボタン一つで保存先フォルダを開き、過去の記録を参照することも可能です。
+                                </p>
+                                <div class="feature-img-box">
+                                    <img src="images/008_voicecatch/folder_access.png" alt="データ管理機能">
+                                </div>
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">AI利便性の検証とテスト</h4>
+                                <p class="feature-desc">
+                                    最新のAI技術をソフト開発に活用するテストケースとして開発。音声データをSlackのAI機能（要約アプリ等）と組み合わせることで、自動で議事録が生成されるワークフローの構築を支援します。
+                                </p>
+                                <div class="feature-img-box">
+                                    <img src="images/008_voicecatch/ai_test.png" alt="AI活用イメージ">
+                                </div>
+                            </div>
+
+                        </div>
+                        
+                        <div style="text-align:center; margin-top:50px; margin-bottom: 50px;">
+                            <a href="/" class="back-btn">◀ 一覧に戻る</a>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KASHIKAデータ集計 詳細 | TOHO HOUSE NEXT</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="wrapper">
+        <script src="common_sidebar.js"></script>
+
+        <main class="main-content">
+            
+            <div class="container" style="padding-top: 40px;">
+                
+                <a href="/" class="back-btn">◀ 一覧に戻る</a>
+
+                <div class="detail-view" style="display: block; margin-top: 20px;">
+                    <div class="detail-header">
+                        <span class="detail-category">データ分析システム</span>
+                        <h2 class="detail-title">KASHIKAデータ集計 (KashikaDataChanger)</h2>
+                        <div class="detail-meta">
+                            <span>顧客分析データの自動集計とレポート作成の効率化</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-body">
+                        <div class="feature-img-box">
+                            <img src="images/007_kashikadata/main_screen.png" alt="KASHIKAデータ集計 メイン画面">
+                        </div>
+
+                        <h3>導入効果</h3>
+                        <div class="effect-box" style="margin-bottom: 40px;">
+                            <p>⏱️ 時短：<strong>手作業による膨大な集計・転記作業をゼロにし、数秒でレポートを生成</strong></p>
+                            <p>🎯 精度：<strong>計算ミスや転記ミスを排除し、信頼性の高い統計データを確保</strong></p>
+                            <p>📊 可視化：<strong>条件付き書式により、成績の優劣や異常値を一目で把握可能</strong></p>
+                        </div>
+
+                        <h3>開発の背景・概要</h3>
+                        <p>
+                            マーケティングツール「KASHIKA」から出力されるデータは非常に有用ですが、そのままでは会議資料として活用しづらく、担当者が手作業でExcelにまとめ直す作業が常態化していました。<br>
+                            <strong>KASHIKAデータ集計</strong>は、この定型的な手作業を自動化するために開発されました。ドラッグ＆ドロップひとつで、購入・売却それぞれの媒体別反響数や契約率を算出し、そのまま貼り出せるレベルの高品質なレポートを自動作成します。
+                        </p>
+
+                        <h3>主な機能</h3>
+                        <div class="feature-card-list">
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">ドラッグ＆ドロップの簡単操作</h4>
+                                <p class="feature-desc">
+                                    複雑な設定は一切不要です。KASHIKAからダウンロードしたCSVファイルをソフトにドロップして「実行」ボタンを押すだけ。誰でも簡単に高度な集計作業が行えます。
+                                </p>
+                                <div class="feature-img-box">
+                                    <img src="images/007_kashikadata/dnd_operation.png" alt="操作画面">
+                                </div>
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">3種のレポートを同時出力</h4>
+                                <p class="feature-desc">
+                                    1つのCSVファイルから「購入媒体データ」「売却媒体データ」「総合集計データ」の3つのExcelファイルを一括生成します。用途に合わせて必要なデータをすぐに取り出せます。
+                                </p>
+                                <div class="feature-img-box">
+                                    <img src="images/007_kashikadata/multi_output.png" alt="出力ファイル一覧">
+                                </div>
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">課・担当者別の自動シート分割</h4>
+                                <p class="feature-desc">
+                                    全体集計だけでなく、CSV内の情報を読み取って「課別」「担当者別」の集計シートを自動で作成します。個人のパフォーマンス分析も瞬時に完了します。
+                                </p>
+                                <div class="feature-img-box">
+                                    <img src="images/007_kashikadata/sheet_split.png" alt="シート分割機能">
+                                </div>
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">インテリジェントな媒体マッピング</h4>
+                                <p class="feature-desc">
+                                    SUUMO、HOME'S、自社HPといった多種多様な反響経路を、あらかじめ定義されたマスターに基づき自動でカテゴリ分けします。表記の揺れもシステムが吸収し、正確にカウントします。
+                                </p>
+                                <div class="feature-img-box">
+                                    <img src="images/007_kashikadata/media_mapping.png" alt="媒体マッピング機能">
+                                </div>
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">異常値を知らせる条件付き書式</h4>
+                                <p class="feature-desc">
+                                    集計後のExcelには自動で条件付き書式が設定されます。例えば、通電率や来社率が高い場合は赤、極端に低い場合は青で色分けされるなど、分析をサポートする工夫が施されています。
+                                </p>
+                                <div class="feature-img-box">
+                                    <img src="images/007_kashikadata/conditional_format.png" alt="条件付き書式">
+                                </div>
+                            </div>
+
+                        </div>
+                        
+                        <div style="text-align:center; margin-top:50px; margin-bottom: 50px;">
+                            <a href="/" class="back-btn">◀ 一覧に戻る</a>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

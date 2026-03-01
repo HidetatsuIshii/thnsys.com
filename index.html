@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOHO HOUSE NEXT システム課</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* サブメニューは基本非表示（!importantで強制） */
+        .submenu {
+            display: none !important;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+        /* openクラスが付いたら「絶対に」表示する */
+        .submenu.open {
+            display: block !important;
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* リンクのデザイン */
+        .sidebar-nav ul li a.tab-link {
+            position: relative;
+            display: block;
+            padding: 15px 25px;
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .sidebar-nav ul li a.tab-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #00aaff;
+        }
+
+        /* 矢印アイコン */
+        .tab-link::after {
+            content: '▶';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.7em;
+            transition: transform 0.3s;
+        }
+        .tab-link.menu-open::after {
+            transform: translateY(-50%) rotate(90deg);
+        }
+
+        /* サブメニューのリンク */
+        .submenu li a {
+            padding: 10px 15px 10px 40px;
+            font-size: 0.85rem;
+            color: #ccc;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+        .submenu li a:hover {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding-left: 45px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <script src="common_sidebar.js"></script>
+        
+        <main class="main-content">
+            
+            <section id="released" class="section active">
+                <div class="container">
+                    <div id="release-list-view">
+                        <div class="section-header">
+                            <span class="section-subtitle">RELEASED</span>
+                            <h3 class="section-title">稼働中のシステム</h3>
+                            <p class="section-desc">詳細を見たいシステムをクリックしてください。</p>
+                        </div>
+                        
+                        <div class="solution-list">
+
+                            <article class="solution-card hover-action" id="sys-suumo">
+                                <a href="001_suumoquick.html" style="text-decoration: none; color: inherit; display: flex; width: 100%;">
+                                    <div class="solution-img" style="position: relative; width: 40%; background-color: #eaedf2; overflow: hidden; min-height: 250px;">
+                                        <span class="status-badge active" style="position: absolute; top: 10px; left: 10px; z-index: 2;">稼働中</span>
+                                        <img src="images/001_suumoquick/logo.ico" alt="SuumoQuick" style="width: 150px; height: 150px; object-fit: contain; display: block; margin: 0 auto;">
+                                    </div>
+                                    <div class="solution-content" style="width: 60%; padding: 35px;">
+                                        <div class="solution-category">Windowsアプリ</div>
+                                        <div class="solution-category">入力支援</div>
+                                        <h4 class="solution-title">SuumoQuick</h4>
+                                        <div class="problem-box">
+                                            <span class="label-problem">Before</span>
+                                            <p>1件の入稿作業に約1時間</p>
+                                            <p>金利などの情報更新が形骸化</p>
+                                        </div>
+                                        <div class="result-box">
+                                            <span class="label-result">After</span>
+                                            <p><b>最短20分で入稿完了</b></p>
+                                            <p><b>全物件のデータを一括更新</b></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </article>
+
+                            <article class="solution-card hover-action" id="sys-multi">
+                                <a href="002_multiquick.html" style="text-decoration: none; color: inherit; display: flex; width: 100%;">
+                                    <div class="solution-img" style="position: relative; width: 40%; background-color: #eaedf2; overflow: hidden; min-height: 250px;">
+                                        <span class="status-badge active" style="position: absolute; top: 10px; left: 10px; z-index: 2;">稼働中</span>
+                                        <img src="images/002_multiquick/logo.ico" alt="MultiQuick" style="width: 150px; height: 150px; object-fit: contain; display: block; margin: 0 auto;">
+                                    </div>
+                                    <div class="solution-content" style="width: 60%; padding: 35px;">
+                                        <div class="solution-category">Windowsアプリ</div>
+                                        <div class="solution-category">入力支援</div>
+                                        <h4 class="solution-title">MultiQuick</h4>
+                                        <div class="problem-box">
+                                            <span class="label-problem">Before</span>
+                                            <p>マルチユースV3への膨大な入力工程</p>
+                                            <p>物件登録作業が大きな事務負担</p>
+                                        </div>
+                                        <div class="result-box">
+                                            <span class="label-result">After</span>
+                                            <p><b>作業時間を1件あたり30分削減</b></p>
+                                            <p><b>ポータルサイト連動を劇的に高速化</b></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </article>
+                            
+                            <article class="solution-card hover-action" id="sys-bukkaku">
+                                <a href="003_autobukkaku.html" style="text-decoration: none; color: inherit; display: flex; width: 100%;">
+                                    <div class="solution-img" style="position: relative; width: 40%; background-color: #eaedf2; overflow: hidden; min-height: 250px;">
+                                        <span class="status-badge active" style="position: absolute; top: 10px; left: 10px; z-index: 2;">稼働中</span>
+                                        <img src="images/003_autobukkaku/logo.ico" alt="Auto物確" style="width: 150px; height: 150px; object-fit: contain; display: block; margin: 0 auto;">
+                                    </div>
+                                    <div class="solution-content" style="width: 60%; padding: 35px;">
+                                        <div class="solution-category">Windowsアプリ</div>
+                                        <div class="solution-category">作業自動化</div>
+                                        <h4 class="solution-title">Auto物確</h4>
+                                        <div class="problem-box">
+                                            <span class="label-problem">Before</span>
+                                            <p>手動による膨大な物件確認作業</p>
+                                            <p>情報遅延による掲載ミスのリスク</p>
+                                        </div>
+                                        <div class="result-box">
+                                            <span class="label-result">After</span>
+                                            <p><b>レインズ等の物件確認を全自動化</b></p>
+                                            <p><b>価格変更や公開終了を素早く検知</b></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </article>
+                            
+                            <article class="solution-card hover-action" id="sys-uploader">
+                                <a href="004_tohouploader.html" style="text-decoration: none; color: inherit; display: flex; width: 100%;">
+                                    <div class="solution-img" style="position: relative; width: 40%; background-color: #eaedf2; overflow: hidden; min-height: 250px;">
+                                        <span class="status-badge active" style="position: absolute; top: 10px; left: 10px; z-index: 2;">稼働中</span>
+                                        <img src="images/004_tohouploader/logo.png" alt="東宝アップローダー" style="width: 200px; height: 200px; object-fit: contain; display: block; margin: 0 auto;">
+                                    </div>
+                                    <div class="solution-content" style="width: 60%; padding: 35px;">
+                                        <div class="solution-category">ブラウザソフト</div>
+                                        <div class="solution-category">URL化</div>
+                                        <h4 class="solution-title">東宝アップローダー</h4>
+                                        <div class="problem-box">
+                                            <span class="label-problem">Before</span>
+                                            <p>ファイル送付のセキュリティ不安</p>
+                                            <p>相手が閲覧したか確認できない</p>
+                                        </div>
+                                        <div class="result-box">
+                                            <span class="label-result">After</span>
+                                            <p><b>アクセスログで関心度を可視化</b></p>
+                                            <p><b>安全かつ追客に最適なタイミングを特定</b></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </article>
+
+                            <article class="solution-card hover-action" id="sys-cutter">
+                                <a href="005_pdfcutter.html" style="text-decoration: none; color: inherit; display: flex; width: 100%;">
+                                    <div class="solution-img" style="position: relative; width: 40%; background-color: #eaedf2; overflow: hidden; min-height: 250px;">
+                                        <img src="images/005_pdfcutter/logo.png" alt="PDFCutter" style="width: 150px; height: 150px; object-fit: contain; display: block; margin: 0 auto;">
+                                    </div>
+                                    <div class="solution-content" style="width: 60%; padding: 35px;">
+                                        <div class="solution-category">Windowsアプリ</div>
+                                        <div class="solution-category">作業自動化</div>
+                                        <h4 class="solution-title">PDFCutter（一括くん）</h4>
+                                        <div class="problem-box">
+                                            <span class="label-problem">Before</span>
+                                            <p>スキャン後の分割・リネームの手間</p>
+                                            <p>大量の書類整理による膨大な時間ロス</p>
+                                        </div>
+                                        <div class="result-box">
+                                            <span class="label-result">After</span>
+                                            <p><b>OCRによる書類の自動判別と分割</b></p>
+                                            <p><b>数百枚の仕分けを数秒で完了</b></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </article>
+
+                            <article class="solution-card hover-action" id="sys-backup">
+                                <a href="006_kashikabackup.html" style="text-decoration: none; color: inherit; display: flex; width: 100%;">
+                                    <div class="solution-img" style="position: relative; width: 40%; background-color: #eaedf2; overflow: hidden; min-height: 250px;">
+                                        <img src="images/006_kashikabackup/logo.ico" alt="KASHIKA自動バックアップ" style="width: 150px; height: 150px; object-fit: contain; display: block; margin: 0 auto;">
+                                    </div>
+                                    <div class="solution-content" style="width: 60%; padding: 35px;">
+                                        <div class="solution-category">Windowsアプリ</div>
+                                        <div class="solution-category">作業自動化</div>
+                                        <h4 class="solution-title">KASHIKA自動バックアップ</h4>
+                                        <div class="problem-box">
+                                            <span class="label-problem">Before</span>
+                                            <p>誤操作による顧客データ消失の不安</p>
+                                            <p>万が一の際の復旧手段が未整備</p>
+                                        </div>
+                                        <div class="result-box">
+                                            <span class="label-result">After</span>
+                                            <p><b>全データを毎日自動バックアップ</b></p>
+                                            <p><b>不測の事態でも前日の状態へ復元可能</b></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </article>
+
+                            <article class="solution-card hover-action" id="sys-summary">
+                                <a href="007_kashikasummary.html" style="text-decoration: none; color: inherit; display: flex; width: 100%;">
+                                    <div class="solution-img" style="position: relative; width: 40%; background-color: #eaedf2; overflow: hidden; min-height: 250px;">
+                                        <img src="images/007_kashikadata/logo.ico" alt="KASHIKAデータ集計" style="width: 150px; height: 150px; object-fit: contain; display: block; margin: 0 auto;">
+                                    </div>
+                                    <div class="solution-content" style="width: 60%; padding: 35px;">
+                                        <div class="solution-category">Windowsアプリ</div>
+                                        <div class="solution-category">業務効率化</div>
+                                        <h4 class="solution-title">KASHIKAデータ集計</h4>
+                                        <div class="problem-box">
+                                            <span class="label-problem">Before</span>
+                                            <p>CSVからの手作業による集計・加工</p>
+                                            <p>集計ミスと資料作成の属人化</p>
+                                        </div>
+                                        <div class="result-box">
+                                            <span class="label-result">After</span>
+                                            <p><b>ボタン一つでExcel集計を完了</b></p>
+                                            <p><b>誰でも迅速かつ正確なデータ分析が可能</b></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </article>
+
+                            <article class="solution-card hover-action" id="sys-voice">
+                                <a href="008_voicecatch.html" style="text-decoration: none; color: inherit; display: flex; width: 100%;">
+                                    <div class="solution-img" style="position: relative; width: 40%; background-color: #eaedf2; overflow: hidden; min-height: 250px;">
+                                        <img src="images/008_voicecatch/logo.ico" alt="コエキャッチ" style="width: 150px; height: 150px; object-fit: contain; display: block; margin: 0 auto;">
+                                    </div>
+                                    <div class="solution-content" style="width: 60%; padding: 35px;">
+                                        <div class="solution-category">Windowsアプリ</div>
+                                        <div class="solution-category">AI / 音声</div>
+                                        <h4 class="solution-title">コエキャッチ</h4>
+                                        <div class="problem-box">
+                                            <span class="label-problem">Before</span>
+                                            <p>会議の重要事項をメモする大きな負担</p>
+                                            <p>記録漏れによる情報の損失リスク</p>
+                                        </div>
+                                        <div class="result-box">
+                                            <span class="label-result">After</span>
+                                            <p><b>ワンクリックで録音・AI文字起こし</b></p>
+                                            <p><b>話し合いを即座に資産化してSlack共有</b></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </article>
+
+                            <article class="solution-card hover-action" id="sys-syslog">
+                                <a href="009_syslog.html" style="text-decoration: none; color: inherit; display: flex; width: 100%;">
+                                    <div class="solution-img" style="position: relative; width: 40%; background-color: #eaedf2; overflow: hidden; min-height: 250px;">
+                                        <span class="status-badge active" style="position: absolute; top: 10px; left: 10px; z-index: 2;">稼働中</span>
+                                        <img src="images/009_syslog/title.png" alt="シスろぐ画面" style="width: 300px; height: 300px; object-fit: contain; display: block; margin: 0 auto;">
+                                    </div>
+                                    <div class="solution-content" style="width: 60%; padding: 35px;">
+                                        <div class="solution-category">ブラウザソフト</div>
+                                        <div class="solution-category">日報管理</div>
+                                        <h4 class="solution-title">シスろぐ</h4>
+                                        <div class="problem-box">
+                                            <span class="label-problem">Before</span>
+                                            <p>日報の形骸化と記入漏れの常態化</p>
+                                            <p>チーム内のコミュニケーション不足</p>
+                                        </div>
+                                        <div class="result-box">
+                                            <span class="label-result">After</span>
+                                            <p><b>AI返信機能で提出率ほぼ100%を達成</b></p>
+                                            <p><b>日報が楽しみになる場の提供と可視化</b></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </article>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const sections = document.querySelectorAll('.section');
+
+        // --- タブクリック時の動作（開閉トグル機能付き） ---
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('data-target');
+
+                // ▼ 1. サブメニューの開閉状態を判定
+                const parentLi = this.closest('li');
+                const submenu = parentLi.querySelector('.submenu');
+                
+                // 「今クリックしたメニューがすでに開いているか？」をチェック
+                const isAlreadyOpen = submenu && submenu.classList.contains('open');
+
+                // ▼ 2. 一旦すべてのメニューを閉じる（リセット）
+                document.querySelectorAll('.submenu').forEach(sub => sub.classList.remove('open'));
+                document.querySelectorAll('.tab-link').forEach(tab => {
+                    tab.classList.remove('menu-open');
+                    tab.classList.remove('active');
+                });
+
+                // ▼ 3. クリックされた場所を「アクティブ」にする
+                this.classList.add('active');
+
+                // ▼ 4. トグル処理
+                // 「開いていなかった場合」のみ開く。（開いていた場合は手順2で閉じたままにする＝閉じる動作）
+                if (submenu && !isAlreadyOpen) {
+                    submenu.classList.add('open');
+                    this.classList.add('menu-open');
+                }
+
+                // ▼ 5. 右側の画面切り替え（画面は常に表示する）
+                if (targetId) {
+                    sections.forEach(sec => {
+                        sec.style.display = 'none';
+                        sec.classList.remove('active');
+                    });
+                    const targetSection = document.getElementById(targetId);
+                    if (targetSection) {
+                        targetSection.style.display = 'block';
+                        setTimeout(() => targetSection.classList.add('active'), 10);
+                    }
+                    // 状態を記憶
+                    sessionStorage.setItem('activeTabId', targetId);
+                }
+            });
+        });
+
+        // --- サブメニューのリンククリック時（スクロールか遷移かを判別） ---
+        const subLinks = document.querySelectorAll('.submenu a');
+        subLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+
+                // もし href が "#" で始まる場合だけ、スクロール処理を実行する
+                if (href.startsWith('#')) {
+                    e.preventDefault(); // ページ遷移を止める
+                    const targetId = href.substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+                } 
+                // href が "#" で始まらない場合（001_suumoquick.html 等）は、
+                // e.preventDefault() が呼ばれないので、そのままページが飛びます。
+            });
+        });
+
+        // --- ページ読み込み時の初期表示（記憶したタブを開く） ---
+        const savedTabId = sessionStorage.getItem('activeTabId');
+        let initialTab = null;
+
+        if (savedTabId) {
+            initialTab = document.querySelector(`.tab-link[data-target="${savedTabId}"]`);
+        }
+        // 記憶がない、または要素がない場合は「稼働中のシステム」をデフォルトにする
+        if (!initialTab) {
+            initialTab = document.querySelector('.tab-link[data-target="released"]');
+        }
+
+        // 初期ロード時は「強制的に開く」状態にする
+        if (initialTab) {
+            const targetId = initialTab.getAttribute('data-target');
+            
+            // 画面表示
+            const targetSection = document.getElementById(targetId);
+            if (targetSection) {
+                targetSection.style.display = 'block';
+                setTimeout(() => targetSection.classList.add('active'), 10);
+            }
+            
+            // メニューを開く
+            const parentLi = initialTab.closest('li');
+            const submenu = parentLi.querySelector('.submenu');
+            if (submenu) submenu.classList.add('open');
+            
+            initialTab.classList.add('active');
+            initialTab.classList.add('menu-open');
+        }
+    });
+    </script>
+</body>
+</html>

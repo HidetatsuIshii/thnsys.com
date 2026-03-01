@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TohoCopyNote 詳細 | TOHO HOUSE NEXT</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="wrapper">
+        <script src="common_sidebar.js"></script>
+
+        <main class="main-content">
+            
+            <div class="container" style="padding-top: 40px;">
+                
+                <a href="/" class="back-btn">◀ 一覧に戻る</a>
+
+                <div class="detail-view" style="display: block; margin-top: 20px; border-left: 5px solid #10b981;">
+                    <div class="detail-header">
+                        <span class="detail-category" style="background:#10b981;">業務効率化（開発中）</span>
+                        <h2 class="detail-title">TohoCopyNote (東宝コピーノート)</h2>
+                        <div class="detail-meta">
+                            <span>コピー＆ペースト作業の効率化と情報の資産化</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-body">
+                        <!--
+                        <div class="feature-img-box">
+                            <img src="images/012_copynote/main_screen.png" alt="TohoCopyNote メイン画面">
+                        </div>
+                        -->
+
+                        <h3>導入効果</h3>
+                        <div class="effect-box" style="margin-bottom: 40px;">
+                            <p>⚡ 入力スピード：<strong>コピーした情報をワンクリックで即座に貼り付け</strong></p>
+                            <p>📁 情報整理：<strong>定型文をグループ分けして管理し、必要な情報を瞬時に呼び出し可能</strong></p>
+                            <p>🛠️ 汎用性：<strong>テキストだけでなく画像履歴にも対応。あらゆる入力シーンをサポート</strong></p>
+                        </div>
+
+                        <h3>開発の背景・概要</h3>
+                        <p>
+                            不動産実務においては、顧客情報や物件概要、定型返信文など、同じ情報を繰り返しコピー＆ペーストする作業が頻繁に発生します。OS標準の機能では履歴管理や整理に限界があり、作業効率を阻害する要因となっていました。<br>
+                            <strong>TohoCopyNote</strong>は、クリップボードの履歴を自動的に保存しつつ、よく使う定型文を資産として効率的に管理するために開発されたデスクトップアプリです。最新バージョンでは、特定のキーを連打するだけで即座に呼び出せる「マエストロ（名人）」級の操作性を追求しています。
+                        </p>
+
+                        <h3>主な機能（開発中の最新仕様）</h3>
+                        <div class="feature-card-list">
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">クリップボード履歴の自動収集・保存</h4>
+                                <p class="feature-desc">
+                                    テキストはもちろん、画像データのコピー履歴も自動的にキャプチャしてSQLiteデータベースに保存します。過去にコピーした情報を紛失することなく、いつでも再利用が可能です。
+                                </p>
+                                <!--
+                                <div class="feature-img-box">
+                                    <img src="images/012_copynote/history_list.png" alt="履歴一覧機能">
+                                </div>
+                                -->
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">「ダイレクト転送」貼り付け機能</h4>
+                                <p class="feature-desc">
+                                    リストから項目を選択するだけで、自動的にターゲットの入力欄へデータを「貼り付け（Ctrl+V）」まで実行します。コピーの手間を一段階省略できる、本ソフト最大のこだわり機能です。
+                                </p>
+                                <!--
+                                <div class="feature-img-box">
+                                    <img src="images/012_copynote/direct_paste.png" alt="ダイレクト転送機能">
+                                </div>
+                                -->
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">Shift/Ctrlキー連打による即時起動</h4>
+                                <p class="feature-desc">
+                                    ShiftキーまたはCtrlキーを2回素早く押すだけで、作業中の画面を邪魔せずにアプリがポップアップ表示されます。マウスへ手を伸ばすことなく、シームレスに入力作業を継続できます。
+                                </p>
+                                <!--
+                                <div class="feature-img-box">
+                                    <img src="images/012_copynote/hotkey.png" alt="クイック起動画面">
+                                </div>
+                                -->
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">定型文のグループ管理・検索機能</h4>
+                                <p class="feature-desc">
+                                    保存した定型文は最大10個のグループに仕分けて管理可能。強力な検索フィルタ機能により、膨大な履歴の中から目的のテキストや画像を瞬時に見つけ出すことができます。
+                                </p>
+                                <!--
+                                <div class="feature-img-box">
+                                    <img src="images/012_copynote/grouping.png" alt="グループ管理画面">
+                                </div>
+                                -->
+                            </div>
+
+                            <div class="feature-row">
+                                <h4 class="feature-head">ピン留め（一番上に固定）機能</h4>
+                                <p class="feature-desc">
+                                    よく使う項目はピン留めすることで、常にリストの最上部に固定できます。重要な情報に優先順位をつけ、ルーチンワークの速度をさらに加速させます。
+                                </p>
+                                <!--
+                                <div class="feature-img-box">
+                                    <img src="images/012_copynote/pin_function.png" alt="ピン留め機能">
+                                </div>
+                                -->
+                            </div>
+
+                        </div>
+                        
+                        <div class="detail-meta" style="margin-top: 40px; color: #10b981; font-weight: bold;">
+                            <span>📝 開発状況：現在、UIの磨き込みと「画像ハッシュ（重複検知）」の最適化を実施中</span>
+                        </div>
+
+                        <div style="text-align:center; margin-top:50px; margin-bottom: 50px;">
+                            <a href="/" class="back-btn">◀ 一覧に戻る</a>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>
