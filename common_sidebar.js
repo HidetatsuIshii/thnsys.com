@@ -45,12 +45,12 @@ document.write(`
 
     <div style="padding: 0 20px; margin-bottom: 20px;">
         <a href="https://docs.google.com/forms/d/e/1FAIpQLSdiudRL0RKO8iXlA-ITugtBdkkOjMn_Zro2fA8vIKAqcXLmXg/viewform" target="_blank" style="display: block; background: #00aaff; color: #fff; text-align: center; padding: 12px 0; border-radius: 6px; font-weight: bold; font-size: 0.9rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">
-            ✉️ 既存ソフトについてのお問い合わせ
+            ✉️ 既存ソフトお問い合わせフォーム
         </a>
     </div>
     <div style="padding: 0 20px; margin-bottom: 20px;">
         <a href="https://docs.google.com/forms/d/e/1FAIpQLSdiudRL0RKO8iXlA-ITugtBdkkOjMn_Zro2fA8vIKAqcXLmXg/viewform" target="_blank" style="display: block; background: #00aaff; color: #fff; text-align: center; padding: 12px 0; border-radius: 6px; font-weight: bold; font-size: 0.9rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">
-            ✉️ こんな事できたらなぁという願望
+            ✉️ こんな事できたらなぁという願望フォーム
         </a>
     </div>
 
