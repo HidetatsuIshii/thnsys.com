@@ -11,14 +11,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* サブメニューの基本（!importantを外したもの） */
+        /* サブメニューは基本非表示（!importantで強制） */
         .submenu {
-            display: none; 
+            display: none !important;
             list-style: none;
             padding: 0;
             margin: 0;
             background-color: rgba(0, 0, 0, 0.2);
         }
+        /* openクラスが付いたら「絶対に」表示する */
         .submenu.open {
             display: block !important;
             animation: slideDown 0.3s ease;
@@ -27,7 +28,7 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-    
+
         /* リンクのデザイン */
         .sidebar-nav ul li a.tab-link {
             position: relative;
@@ -41,7 +42,7 @@
             background-color: rgba(255, 255, 255, 0.1);
             border-left: 4px solid #00aaff;
         }
-    
+
         /* 矢印アイコン */
         .tab-link::after {
             content: '▶';
@@ -55,7 +56,7 @@
         .tab-link.menu-open::after {
             transform: translateY(-50%) rotate(90deg);
         }
-    
+
         /* サブメニューのリンク */
         .submenu li a {
             padding: 10px 15px 10px 40px;
@@ -313,28 +314,6 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-
-        // --- 【追記】スマホメニューのボタン制御 ---
-        const menuBtn = document.getElementById('menu-toggle');
-        const sidebar = document.querySelector('.sidebar');
-    
-        if (menuBtn && sidebar) {
-            menuBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                sidebar.classList.toggle('active');
-                menuBtn.classList.toggle('open');
-            });
-    
-            // どこかをクリックしたら閉じる処理
-            document.addEventListener('click', function(e) {
-                if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
-                    if (!sidebar.contains(e.target) && e.target !== menuBtn) {
-                        sidebar.classList.remove('active');
-                        menuBtn.classList.remove('open');
-                    }
-                }
-            });
-        }
         
         const tabLinks = document.querySelectorAll('.tab-link');
         const sections = document.querySelectorAll('.section');
