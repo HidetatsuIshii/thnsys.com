@@ -4,11 +4,13 @@ document.write(`
     <span></span>
     <span></span>
 </button>
+
 <aside class="sidebar">
     <div class="sidebar-header">
         <h1 class="logo">
             <a href="/"><img src="images/logo.png" alt="TOHO HOUSE NEXT"></a>
         </h1>
+        <div style="color: #003366; font-weight: bold; font-size: 0.9rem; margin-top: 5px;">システム課<br>作成ソフト一覧</div>
     </div>
 
     <nav class="sidebar-nav">
@@ -28,7 +30,6 @@ document.write(`
                     <li><a href="013_heyapin.html">・部屋ピン</a></li>
                 </ul>
             </li>
-
             <li>
                 <a href="#" class="tab-link">開発検討中</a>
                 <ul class="submenu open">
@@ -43,23 +44,47 @@ document.write(`
     <div class="sidebar-contact">
         <p class="sc-label">システムに関するご相談</p>
         <div class="sc-number">
-            <img src="images/telicon.png" width="28" height="28" alt="電話アイコン" style="vertical-align: middle;">
+            <img src="images/telicon.png" width="24" height="24" alt="電話" style="vertical-align: middle; margin-right:5px;">
             03-4330-4444
         </div>
     </div>
 
-    <div style="padding: 0 20px; margin-bottom: 20px;">
-        <a href="https://forms.gle/948exTErX2JZjZjcA" target="_blank" style="display: block; background: #00aaff; color: #fff; text-align: center; padding: 12px 0; border-radius: 6px; font-weight: bold; font-size: 0.8rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">
-            ✉️ 既存ソフト専用<br>お問い合わせフォーム
+    <div style="padding: 0 15px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
+        <a href="https://forms.gle/..." target="_blank" style="display: block; background: #00aaff; color: #fff; text-align: center; padding: 10px 0; border-radius: 6px; font-weight: bold; font-size: 0.8rem; text-decoration: none;">
+            💻 既存ソフト専用<br>お問い合わせフォーム
         </a>
-    </div>
-    <div style="padding: 0 20px; margin-bottom: 20px;">
-        <a href="https://forms.gle/Ehuu76fdSD3RBxqf6" target="_blank" style="display: block; background: #00aaff; color: #fff; text-align: center; padding: 12px 0; border-radius: 6px; font-weight: bold; font-size: 0.8rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">
-            ✉️ こんな事できたらなぁ<br>願望フォーム
+        <a href="https://forms.gle/..." target="_blank" style="display: block; background: #00aaff; color: #fff; text-align: center; padding: 10px 0; border-radius: 6px; font-weight: bold; font-size: 0.8rem; text-decoration: none;">
+            📩 こんな事できたらなぁ<br>要望フォーム
         </a>
-    </div>
-
-    <div class="sidebar-footer">
     </div>
 </aside>
 `);
+
+// 動作スクリプト
+(function() {
+    function initMobileMenu() {
+        const btn = document.getElementById('menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        if (!btn || !sidebar) return;
+
+        btn.onclick = function(e) {
+            e.stopPropagation();
+            sidebar.classList.toggle('active');
+            btn.classList.toggle('open');
+        };
+
+        // メニュー外タップで閉じる
+        document.addEventListener('click', function(e) {
+            if (sidebar.classList.contains('active') && !sidebar.contains(e.target) && e.target !== btn) {
+                sidebar.classList.remove('active');
+                btn.classList.remove('open');
+            }
+        });
+    }
+
+    if (document.readyState === 'complete') {
+        initMobileMenu();
+    } else {
+        window.addEventListener('load', initMobileMenu);
+    }
+})();
