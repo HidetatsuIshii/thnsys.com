@@ -1,4 +1,9 @@
 document.write(`
+<button id="menu-toggle" class="menu-btn">
+    <span></span>
+    <span></span>
+    <span></span>
+</button>
 <aside class="sidebar">
     <div class="sidebar-header">
         <h1 class="logo">
