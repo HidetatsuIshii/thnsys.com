@@ -11,81 +11,67 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
-    /* サブメニュー */
-    .submenu {
-        display: none; /* !important を削除しました */
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        background-color: rgba(0, 0, 0, 0.2);
-    }
-    /* openクラスが付いたら表示する */
-    .submenu.open {
-        display: block !important;
-        animation: slideDown 0.3s ease;
-    }
-    @keyframes slideDown {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* リンクのデザイン */
-    .sidebar-nav ul li a.tab-link {
-        position: relative;
-        display: block;
-        padding: 15px 25px;
-        color: #fff;
-        text-decoration: none;
-        cursor: pointer;
-    }
-    .sidebar-nav ul li a.tab-link.active {
-        background-color: rgba(255, 255, 255, 0.1);
-        border-left: 4px solid #00aaff;
-    }
-
-    /* 矢印アイコン */
-    .tab-link::after {
-        content: '▶';
-        position: absolute;
-        right: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 0.7em;
-        transition: transform 0.3s;
-    }
-    .tab-link.menu-open::after {
-        transform: translateY(-50%) rotate(90deg);
-    }
-
-    /* サブメニューのリンク */
-    .submenu li a {
-        padding: 10px 15px 10px 40px;
-        font-size: 0.85rem;
-        color: #ccc;
-        text-decoration: none;
-        display: block;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        transition: all 0.2s;
-    }
-    .submenu li a:hover {
-        color: #fff;
-        background-color: rgba(255, 255, 255, 0.1);
-        padding-left: 45px;
-    }
-
-    /* ▼▼▼ スマホ表示を正常化するための追記箇所 ▼▼▼ */
-    @media (max-width: 768px) {
-        .wrapper {
-            display: block !important; /* flexによる横並びを解除 */
+        /* サブメニューの基本（!importantを外したもの） */
+        .submenu {
+            display: none; 
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            background-color: rgba(0, 0, 0, 0.2);
         }
-        .main-content {
-            margin-left: 0 !important; /* サイドバー用の余白を強制削除 */
-            width: 100% !important;   /* 幅を100%に広げる */
-            padding-top: 80px !important; /* ハンバーガーボタンとの重なり防止 */
+        .submenu.open {
+            display: block !important;
+            animation: slideDown 0.3s ease;
         }
-    }
-    /* ▲▲▲ 追記箇所ここまで ▲▲▲ */
-</style>
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    
+        /* リンクのデザイン */
+        .sidebar-nav ul li a.tab-link {
+            position: relative;
+            display: block;
+            padding: 15px 25px;
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .sidebar-nav ul li a.tab-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #00aaff;
+        }
+    
+        /* 矢印アイコン */
+        .tab-link::after {
+            content: '▶';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.7em;
+            transition: transform 0.3s;
+        }
+        .tab-link.menu-open::after {
+            transform: translateY(-50%) rotate(90deg);
+        }
+    
+        /* サブメニューのリンク */
+        .submenu li a {
+            padding: 10px 15px 10px 40px;
+            font-size: 0.85rem;
+            color: #ccc;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+        .submenu li a:hover {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding-left: 45px;
+        }
+    </style>
 </head>
 <body>
 
