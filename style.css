@@ -804,3 +804,42 @@ ul { list-style: none; padding: 0; margin: 0; }
         padding: 20px !important;
     }
 }
+/* --- スマホ表示の強制リセット（Gemini風） --- */
+@media (max-width: 768px) {
+    /* コンテンツの潰れを直す */
+    .wrapper {
+        display: block !important;
+    }
+    .main-content {
+        margin-left: 0 !important; /* PC用の余白を強制削除 */
+        width: 100% !important;   /* 幅を100%に広げる */
+        padding-top: 70px !important; /* ボタンと被らないように余白 */
+    }
+
+    /* サイドバーを画面の外（左）へ強制的に飛ばす */
+    .sidebar {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        transform: translateX(-100%) !important; /* これで画面から消えます */
+        width: 280px !important;
+        height: 100vh !important;
+        z-index: 9999 !important;
+        transition: transform 0.3s ease !important;
+    }
+
+    /* JavaScriptで active クラスがついた時だけ画面に出す */
+    .sidebar.active {
+        transform: translateX(0) !important;
+    }
+
+    /* 三本線ボタンを見えるようにする */
+    .menu-btn {
+        display: flex !important; /* display:noneを解除 */
+        position: fixed !important;
+        top: 15px;
+        left: 15px;
+        z-index: 10000 !important;
+        background: #003366 !important; /* 濃い紺色 */
+    }
+}
