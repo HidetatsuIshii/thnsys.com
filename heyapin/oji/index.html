@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>部屋ピン</title>
+<link rel="icon" href="favicon.ico">
+  <link rel="stylesheet" href="style.css?v=fix01">
+  <link rel="manifest" href="manifest.json">  
+  <link rel="apple-touch-icon" href="icon-192-v4.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="部屋ピン">
+</head>
+<body>
+
+<div id="loading">
+  <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 10px;">読み込み中...</div>
+  <div id="progress-wrapper" style="display:none; width: 240px; text-align: center;">
+    <div style="width: 100%; height: 10px; background-color: rgba(255,255,255,0.3); border-radius: 5px; overflow: hidden; margin-bottom: 5px;">
+      <div id="progress-bar" style="width: 0%; height: 100%; background-color: #4caf50; transition: width 0.3s ease;"></div>
+    </div>
+    <div id="progress-text" style="color: white; font-size: 0.9rem;">0 / 0 件完了</div>
+  </div>
+</div>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h2>ログイン</h2>
+    <input type="text" id="loginId" placeholder="ユーザーID">
+    <input type="password" id="loginPass" placeholder="パスワード">
+    <button type="button" class="btn-primary" onclick="tryLogin()">ログイン</button>
+  </div>
+</div>
+
+<div id="app-screen">
+  <header>
+    <div class="header-left-group">
+      <div id="header-title" onclick="switchTab('map-view')" style="cursor: pointer;">部屋予約</div>
+      <button type="button" class="btn-header-refresh" onclick="manualRefresh()">
+        <span>&#8635;</span> 更新
+      </button>
+      <span id="last-update-time" class="last-update-text"></span>
+    </div>
+
+    <div class="user-info">
+      <button id="btn-header-back" class="btn-header-back" onclick="switchTab('map-view')" style="display: none;">
+        ↩ 戻る
+      </button>
+
+      <div class="settings-container">
+        <span class="settings-icon" onclick="toggleSettingsMenu()">&#9881;</span>
+        <div id="settings-dropdown" class="settings-dropdown-content">
+  <div class="settings-user-display">
+    <span>👤</span> <span id="display-user-name"></span> さん
+  </div>
+  
+  <div class="settings-item" onclick="requestNotificationPermission()">
+    <span>🔔</span> 通知設定 (ONにする)
+  </div>
+
+  <div class="settings-item" onclick="openPasswordModal()">
+    <span>&#128274;</span> PW変更 
+  </div>
+
+  <div class="settings-item" onclick="openHistoryFromMenu()">
+    <span>📅</span> 履歴
+  </div>
+
+  <div class="settings-item" onclick="openReceiveHistoryFromMenu()">
+    <span>📥</span> 受信履歴
+  </div>
+
+  <div class="settings-item" onclick="openContactModal()">
+    <span>&#9993;</span> お問い合わせ 
+  </div>
+
+  <div class="settings-item logout-item" onclick="logout()">
+    <span>&#10162;</span> ログアウト
+  </div>
+</div>
+      </div>
+    </div>
+  </header>
+
+  <div id="notification-container"></div>
+  <div id="view-map-view" class="view-container active">
+  <div class="map-wrapper">
+    
+    <div id="hq-map-unit" class="floor-map-unit active">
+        <div class="map-inner-wrapper">
+            <img id="map-img-hq" src="" alt="本社マップ" class="map-image">
+            <div id="overlay-container-hq" class="overlay-layer"></div>
+        </div>
+    </div>
+    <div id="map-timeline-section" class="map-timeline-hidden">
+      <div class="sticky-header-wrapper">
+        <div id="timeline-filter-row" class="filter-row-container"></div>
+
+          <div class="calendar-nav-header">
+          <div class="nav-left">
+            </div>
+          
+          <div class="nav-center month-nav-center">
+            <div class="calendar-header-controls">
+              <button type="button" class="btn-nav" onclick="shiftMonth(-1)"> &lt; </button>
+              
+              <label for="map-date" class="month-year-wrapper" onclick="try{ document.getElementById('map-date').showPicker(); }catch(e){}">
+                <span id="display-month-year" class="month-year-text"></span>
+                <span class="month-year-icon">▼</span>
+                <input type="date" id="map-date" class="hidden-date-picker" onchange="renderVerticalTimeline('map'); updateMonthlyCalendar();">
+              </label>
+
+              <button type="button" class="btn-nav" onclick="shiftMonth(1)"> &gt; </button>
+            </div>
+
+            <div id="calendar-grid-container" class="calendar-month-grid"></div>
+          </div>
+          
+          <div class="nav-right">
+        <div class="view-switch">
+          <button class="btn-view active" onclick="switchCalendarView('day', this)">日</button>
+          <button class="btn-view" onclick="switchCalendarView('week', this)">週</button>
+          <button class="btn-view" onclick="switchCalendarView('month', this)">月</button>
+        </div>
+      </div>
+        </div>
+      </div> <div id="map-room-headers" class="sticky-room-header-row"></div>
+
+      <div class="calendar-scroll-area">
+
+      <div class="calendar-scroll-area">
+        <div class="time-axis-col" id="time-axis-map"></div>
+        <div class="rooms-container" id="rooms-container-map"></div>
+      </div>
+    </div>
+  
+  <button class="fab-avail-btn" onclick="openAvailabilityModal()">
+    <span>空室</span><span>確認</span>
+  </button>
+    </div> 
+  </div> 
+</div> <div id="view-logs" class="view-container">
+    <div class="log-wrapper">
+      <div class="log-header-area">
+          <h3>操作履歴 (最大1000件)</h3>
+          <div class="log-search-box">
+              <input type="text" id="log-search-input" placeholder="履歴を検索..." oninput="searchLogs()">
+          </div>
+      </div>
+      <table class="log-table">
+        <thead><tr><th>日時</th><th>操作者</th><th>操作</th><th>詳細</th></tr></thead>
+        <tbody id="log-tbody"></tbody>
+      </table>
+      <div id="log-pagination" class="pagination-container"></div>
+    </div>
+  </div>
+
+  <div id="view-receive-logs" class="view-container">
+    <div class="log-wrapper">
+      <div class="log-header-area">
+          <h3>帰社報告 受信履歴 (最大500件)</h3>
+          <div class="log-search-box">
+              <input type="text" id="receive-log-search-input" placeholder="名前で検索..." oninput="searchReceiveLogs()">
+          </div>
+      </div>
+      <table class="log-table">
+        <thead><tr><th>受信日時</th><th>送信者</th><th>内容</th><th style="text-align:center;">状態</th></tr></thead>
+        <tbody id="receive-log-tbody"></tbody>
+      </table>
+      <div id="receive-log-pagination" class="pagination-container"></div>
+    </div>
+  </div>
+  </div>
+
+<div id="detailModal" class="modal">
+  <div class="modal-content modal-sm">
+    <div class="detail-header-wrapper">
+      <h3 class="modal-header-line">予約詳細</h3>
+      <div id="detail-meta-info" class="detail-meta-info"></div>
+    </div>
+    <table class="detail-table">
+      <tr><th>日時</th><td id="detail-time" class="text-bold text-lg"></td></tr>
+      <tr><th>部屋</th><td id="detail-room"></td></tr>
+      <tr><th>用件</th><td id="detail-title"></td></tr>
+      <tr><th>参加者</th><td id="detail-members"></td></tr>
+      <tr>
+        <th>備考</th>
+        <td>
+          <div id="detail-note" class="note-scroll-area text-muted"></div>
+        </td>
+      </tr>
+    </table>
+
+    <div class="modal-footer">
+      <button type="button" onclick="closeDetailModal()" class="btn-secondary btn-equal">閉じる</button>
+      <button type="button" id="btn-go-edit" class="btn-primary btn-equal">編集する</button>
+    </div>
+  </div>
+</div>
+
+<div id="bookingModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-top-bar">
+        <h3 id="modal-title">新規予約</h3>
+        <span onclick="closeModal()" class="close-icon">&times;</span>
+    </div>
+    <input type="hidden" id="edit-res-id">
+    
+    <div class="form-group">
+        <label>部屋</label>
+        <select id="input-room"></select>
+    </div>
+
+    <div class="form-row align-end mb-15">
+      <div class="flex-1-2">
+        <label for="input-date">日付</label>
+        <input type="date" id="input-date">
+      </div>
+
+      <div class="flex-1">
+        <label for="input-start">開始</label>
+        <div class="time-picker-wrapper">
+          <input type="tel" id="input-start" placeholder="09:00" autocomplete="off"
+                 onclick="selectTimePart(this)" 
+                 onkeyup="handleTimeArrowKeys(event, this)"
+                 onblur="formatTimeInput(this)">
+          <div class="time-picker-arrow">▼</div>
+          </div>
+      </div>
+
+      <div class="time-range-sep">～</div>
+
+      <div class="flex-1">
+        <label for="input-end">終了</label>
+        <div class="time-picker-wrapper">
+          <input type="tel" id="input-end" placeholder="10:00" autocomplete="off"
+                 onclick="selectTimePart(this)" 
+                 onkeyup="handleTimeArrowKeys(event, this)"
+                 onblur="formatTimeInput(this)">
+          <div class="time-picker-arrow">▼</div>
+        </div>
+      </div>
+    </div>
+
+    <label>用件 (タイトル)</label>
+    <input type="text" id="input-title" placeholder="定例会議など">
+
+   <div id="edit-series-option" style="display:none; background:#e8f5e9; padding:10px; border-radius:6px; margin: 10px 0; border:1px solid #c8e6c9;">
+        
+        <div id="series-rule-display" style="font-weight:bold; color:#2c3e50; margin-bottom:8px; font-size:0.9rem; padding-bottom:5px; border-bottom:1px dashed #a5d6a7;">
+            </div>
+
+        <label style="display:flex; align-items:center; cursor:pointer; gap: 8px; margin:0; color:#2e7d32;">
+            <input type="checkbox" id="check-sync-series" checked
+                   style="width: 20px !important; height: 20px !important; margin: 0 !important; cursor: pointer; flex-shrink: 0;">
+            <span style="font-weight:bold;">他の繰り返し予定も一緒に変更</span>
+        </label>
+        <div style="font-size:0.8rem; color:#666; margin-top:5px; padding-left:28px;">
+            ※チェックを外して保存すると、この予定は繰り返しから除外され、今後リンクされなくなります（元に戻せません）。
+        </div>
+    </div>
+    <div id="create-repeat-section" style="margin-top: 15px; margin-bottom: 10px; border-top: 1px solid #eee; padding-top: 10px;">
+       <label style="display:flex; align-items:center; cursor:pointer; gap: 8px; margin-bottom: 5px;">
+            <input type="checkbox" id="check-repeat" onchange="toggleRepeatOptions()" 
+                   style="width: 20px !important; height: 20px !important; margin: 0 !important; cursor: pointer; flex-shrink: 0;">
+            <span style="font-weight:bold; margin-top: 1px;">繰り返し予約をする</span>
+       </label>
+       
+       <div id="repeat-options" style="display:none; background:#f8f9fa; padding:15px; border-radius:6px; margin-top:5px; border:1px solid #e0e0e0;">
+           
+           <div style="margin-bottom:15px; display:flex; align-items:center; flex-wrap:wrap; gap: 5px;">
+               <span style="font-weight:bold;">間隔:</span>
+               <input type="number" id="repeat-interval" value="1" min="1" 
+                      style="width:60px !important; text-align:center; margin:0 !important; height: 38px !important; padding: 5px !important;">
+               
+               <select id="repeat-unit" style="width:auto !important; margin:0 !important; height: 38px !important; padding: 0 10px !important;">
+                   <option value="day">日</option>
+                   <option value="week" selected>週</option>
+                   <option value="month">月</option>
+               </select>
+               <span>おき</span>
+           </div>
+
+            <div style="border-top:1px solid #ccc; paddingTop:5px; margin-top:5px;">
+                <div style="margin-bottom:5px; font-weight:bold; font-size:0.9em;">終了日:</div>
+                
+                <div style="margin-bottom:5px;">
+                    <label style="cursor:pointer;">
+                        <input type="radio" name="repeat-end" value="none" checked> 終了しない (最大3ヶ月)
+                    </label>
+                </div>
+                
+                <div style="margin-bottom:5px; display:flex; align-items:center;">
+                    <label style="cursor:pointer; margin-right:5px;">
+                        <input type="radio" name="repeat-end" value="date"> 指定日まで
+                    </label>
+                    <input type="date" id="repeat-until" style="width:130px; padding:2px;">
+                </div>
+                
+                <div style="display:flex; align-items:center;">
+                    <label style="cursor:pointer; margin-right:5px;">
+                        <input type="radio" name="repeat-end" value="count">
+                    </label>
+                  <input type="number" id="repeat-count" value="10" min="1" style="width:80px !important; text-align:center; margin-right:5px;">                    <span>回繰り返して終了</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <label>参加者設定</label>
+    <div class="group-container" id="group-buttons-area"></div>
+    
+    <div class="shuttle-container">
+        <div class="shuttle-box">
+            <div class="shuttle-header">候補者一覧</div>
+            <div class="shuttle-search">
+                <input type="text" placeholder="名前検索..." id="shuttle-search-input" oninput="renderShuttleLists(this.value)">
+            </div>
+            <div class="shuttle-list" id="list-candidates"></div>
+        </div>
+        <div class="shuttle-box bg-selected">
+            <div class="shuttle-header bg-header-selected">参加予定者</div>
+            <div class="shuttle-list" id="list-selected"></div>
+        </div>
+    </div>
+    
+    <label>備考</label>
+    <textarea id="input-note" rows="2" placeholder="備品要望など"></textarea>
+
+    <div class="modal-footer">
+      <button type="button" id="btn-back-avail" class="btn-secondary" onclick="backToAvailability()" style="display:none; margin-right:auto;">← 戻る</button>
+      <button type="button" id="btn-modal-cancel" onclick="closeModal()" class="btn-secondary">キャンセル</button>
+      <button type="button" id="btn-save" class="btn-primary" onclick="saveBooking()">保存</button>
+      <button type="button" id="btn-delete" class="btn-danger" onclick="deleteBooking()" style="display:none;">削除</button>
+    </div>
+
+  </div>
+</div>
+
+<div id="groupCreateModal" class="modal">
+  <div class="modal-content modal-md">
+    <h3 class="mt-0" id="group-modal-title">グループ作成</h3>
+    <input type="hidden" id="edit-group-id">
+    
+    <label>グループ名</label>
+    <input type="text" id="new-group-name" placeholder="例: プロジェクトAチーム">
+    
+    <label>メンバー選択</label>
+    <div class="shuttle-container">
+        <div class="shuttle-box">
+            <div class="shuttle-header">候補者</div>
+            <div class="shuttle-search">
+                <input type="text" placeholder="検索..." id="group-shuttle-search" oninput="renderGroupCreateShuttle()">
+            </div>
+            <div class="shuttle-list" id="group-create-candidates"></div>
+        </div>
+        <div class="shuttle-box bg-selected">
+            <div class="shuttle-header bg-header-selected">選択中</div>
+            <div class="shuttle-list" id="group-create-selected"></div>
+        </div>
+    </div>
+
+    <div class="modal-footer justify-end">
+      <button type="button" onclick="closeGroupModal()" class="btn-secondary">キャンセル</button>
+      <button type="button" class="btn-primary" onclick="saveNewGroup()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div id="availabilityModal" class="modal">
+  <div class="modal-content modal-md">
+    <div class="modal-top-bar">
+      <h3>空き状況を確認</h3>
+      <span class="close-icon" onclick="closeAvailabilityModal()">&times;</span>
+    </div>
+
+    <div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px;">
+      
+      <div class="avail-search-row">
+        <div class="avail-input-group">
+          <label>日付</label>
+          <input type="date" id="avail-date">
+        </div>
+
+        <div class="avail-time-row">
+            <div class="avail-input-group">
+              <label>開始</label>
+              <div class="time-picker-wrapper">
+                <input type="tel" id="avail-start" placeholder="09:00" autocomplete="off"
+                       onclick="selectTimePart(this)" 
+                       onkeyup="handleTimeArrowKeys(event, this)"
+                       onblur="formatTimeInput(this)">
+                <div class="time-picker-arrow">▼</div>
+              </div>
+            </div>
+
+            <div class="time-range-sep">～</div>
+
+            <div class="avail-input-group">
+              <label>終了</label>
+              <div class="time-picker-wrapper">
+                <input type="tel" id="avail-end" placeholder="10:00" autocomplete="off"
+                       onclick="selectTimePart(this)" 
+                       onkeyup="handleTimeArrowKeys(event, this)"
+                       onblur="formatTimeInput(this)">
+                <div class="time-picker-arrow">▼</div>
+              </div>
+            </div>
+        </div>
+      </div>
+      
+      <div class="avail-search-action">
+        <button class="btn-primary btn-search-avail" onclick="execAvailabilitySearch()">検索</button>
+      </div>
+
+    </div>
+
+    <div id="avail-result-container" style="overflow-y:auto; flex:1; border-top:1px solid #eee;"></div>
+    
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeAvailabilityModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<div id="passwordModal" class="modal">
+  <div class="modal-content modal-sm">
+    <div class="modal-top-bar">
+      <h3>パスワード変更</h3>
+      <span class="close-icon" onclick="closePasswordModal()">&times;</span>
+    </div>
+
+    <label>現在のパスワード</label>
+    <input type="password" id="old-pass" placeholder="現在のパスワード">
+
+    <label>新しいパスワード</label>
+    <input type="password" id="new-pass" placeholder="新しいパスワード">
+
+    <label>新しいパスワード(確認)</label>
+    <input type="password" id="new-pass-confirm" placeholder="もう一度入力">
+
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="closePasswordModal()">キャンセル</button>
+      <button type="button" class="btn-primary" onclick="savePassword()">変更する</button>
+    </div>
+  </div>
+</div>
+
+<div id="contactModal" class="modal">
+  <div class="modal-content modal-sm">
+    <div class="modal-top-bar">
+      <h3>お問い合わせ</h3>
+      <span class="close-icon" onclick="closeContactModal()">&times;</span>
+    </div>
+    
+    <p style="font-size:0.9rem; color:#666; margin-bottom:10px;">
+      システムの不具合や改善要望など、お気づきの点をお知らせください。
+    </p>
+
+    <label>内容</label>
+    <textarea id="contact-message" rows="5" placeholder="例: ○○の機能が使いにくい、××という機能が欲しい、など" style="width:100%; min-height:100px; padding:10px;"></textarea>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="closeContactModal()">キャンセル</button>
+      <button type="button" class="btn-primary" onclick="sendContactFeedback()">送信する</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js?v=fix08"></script>
+</body>
+</html>
