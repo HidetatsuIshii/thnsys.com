@@ -49,18 +49,18 @@ document.write(`
         </div>
     </div>
 
-    <div style="padding: 0 20px; margin-bottom: 20px;">
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdiudRL0RKO8iXlA-ITugtBdkkOjMn_Zro2fA8vIKAqcXLmXg/viewform" target="_blank" style="display: block; background: #00aaff; color: #fff; text-align: center; padding: 12px 0; border-radius: 6px; font-weight: bold; font-size: 0.9rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">
-            ✉️ 既存ソフト<br>問い合わせフォーム
+    <div style="padding: 0 20px; margin-bottom: 12px;">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdiudRL0RKO8iXlA-ITugtBdkkOjMn_Zro2fA8vIKAqcXLmXg/viewform" target="_blank" style="display: block; background: #00aaff; color: #fff; text-align: center; padding: 12px 0; border-radius: 6px; font-weight: bold; font-size: 0.9rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s; line-height: 1.4;">
+            ✉️ 既存ソフトの<br>問い合わせフォーム
         </a>
     </div>
 
-    <div style="padding: 0 20px; margin-bottom: 20px; display: flex; gap: 8px;">
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfi1aOX0Ttv070YuDYiuiZcED0WqDrtYpd6aLYvfl2_qbGlDA/viewform?usp=publish-editor" target="_blank" style="flex: 1; display: flex; align-items: center; justify-content: center; background: #ff9900; color: #fff; text-align: center; padding: 10px 0; border-radius: 6px; font-weight: bold; font-size: 0.9rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">
+    <div style="padding: 0 20px; margin-bottom: 20px;">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfi1aOX0Ttv070YuDYiuiZcED0WqDrtYpd6aLYvfl2_qbGlDA/viewform?usp=publish-editor" target="_blank" style="display: block; background: #ff9900; color: #fff; text-align: center; padding: 12px 0; border-radius: 6px; font-weight: bold; font-size: 0.9rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s; margin-bottom: 6px;">
             💡 新規ご要望フォーム
         </a>
-        <a href="https://docs.google.com/spreadsheets/d/1i5SI3GwsjRCBCd3ZYmACnh3ZQvfyZzVe3abCWBg2jyA/edit?gid=0#gid=0" target="_blank" style="display: flex; align-items: center; justify-content: center; background: #28a745; color: #fff; padding: 0 15px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s; white-space: nowrap;">
-            回答
+        <a href="https://docs.google.com/spreadsheets/d/1i5SI3GwsjRCBCd3ZYmACnh3ZQvfyZzVe3abCWBg2jyA/edit?gid=0#gid=0" target="_blank" style="display: block; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); color: #fff; text-align: center; padding: 6px 0; border-radius: 4px; font-size: 0.8rem; text-decoration: none; transition: 0.3s;">
+            ▶ ご要望の回答一覧はこちら
         </a>
     </div>
 
