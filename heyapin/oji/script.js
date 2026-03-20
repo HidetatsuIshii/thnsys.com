@@ -658,7 +658,7 @@ function selectRoomFromMap(element) {
 
   // フィルタ設定（クリックした部屋だけを表示）
   activeFilterIds.clear();
-  activeFilterIds.add(roomId);
+  activeFilterIds.add('ALL');
   saveFilterState();            
   renderTimelineFilters();      
   currentMapRoomId = roomId;
