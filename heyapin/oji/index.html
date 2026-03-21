@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>部屋ピン</title>
 <link rel="icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=fix01">
+  <link rel="stylesheet" href="style.css?v=fix02">
   <link rel="manifest" href="manifest.json">  
   <link rel="apple-touch-icon" href="icon-192-v4.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -245,7 +245,9 @@
     </div>
 
     <label>用件 (タイトル)</label>
-    <input type="text" id="input-title" placeholder="定例会議など">
+    <input type="text" id="input-title" placeholder="定例会議など" oninput="syncTitleTags()">
+
+    <div class="title-tags-container" id="title-tags-area"></div>
 
    <div id="edit-series-option" style="display:none; background:#e8f5e9; padding:10px; border-radius:6px; margin: 10px 0; border:1px solid #c8e6c9;">
         
@@ -468,6 +470,6 @@
   </div>
 </div>
 
-<script src="script.js?v=fix09"></script>
+<script src="script.js?v=fix10"></script>
 </body>
 </html>
