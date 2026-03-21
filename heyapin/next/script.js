@@ -2,8 +2,12 @@
    1. 定数定義 & 設定
    ============================================== */
 const API_URL = "https://qjmcdwjdzk.execute-api.ap-northeast-1.amazonaws.com"; 
-const SESSION_KEY_USER = 'bookingApp_User';
-const SESSION_KEY_TIME = 'bookingApp_LoginTime';  // 保存するキー名(時間)
+// URLから /oji/ または /nerima/ を抽出する
+const CURRENT_BRANCH = window.location.pathname.split('/').filter(p => p && p !== 'heyapin')[0] || 'default';
+
+// キー名に拠点名を結合して独立させる
+const SESSION_KEY_USER = `bookingApp_User_${CURRENT_BRANCH}`;
+const SESSION_KEY_TIME = `bookingApp_LoginTime_${CURRENT_BRANCH}`;
 const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000;   
 let pendingExternalData = null; // SS連携データの一時保存用
 
@@ -198,6 +202,7 @@ function checkAutoLogin() {
 }
 
 function logout() { 
+  // SESSION_KEY_USER は既に拠点名が含まれた値になっているのでそのままでOK
   localStorage.removeItem(SESSION_KEY_USER);
   localStorage.removeItem(SESSION_KEY_TIME);
   location.reload(); 
@@ -251,7 +256,8 @@ function loadFilterState() {
   }
 
   // キー名にユーザーIDを付与する (例: roompin_filter_state_v1_user001)
-  const userKey = `${FILTER_STORAGE_KEY_BASE}_${currentUser.userId}`;
+   if (!currentUser || !currentUser.userId) return;
+  const userKey = `${FILTER_STORAGE_KEY_BASE}_${CURRENT_BRANCH}_${currentUser.userId}`;
   const saved = localStorage.getItem(userKey);
 
   if (saved) {
@@ -273,7 +279,7 @@ function saveFilterState() {
   // ユーザー情報がない場合は保存しない
   if (!currentUser || !currentUser.userId) return;
 
-  const userKey = `${FILTER_STORAGE_KEY_BASE}_${currentUser.userId}`;
+  const userKey = `${FILTER_STORAGE_KEY_BASE}_${CURRENT_BRANCH}_${currentUser.userId}`;
   localStorage.setItem(userKey, JSON.stringify(Array.from(activeFilterIds)));
 }
 
