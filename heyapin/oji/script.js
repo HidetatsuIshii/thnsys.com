@@ -52,7 +52,8 @@ let masterData = {
   logs: [], 
   groups: [],
   returnReports: [], 
-  allReturnReports: [] 
+  allReturnReports: [] ,
+  titleTags: []
 };
 let activeReportId = null;
 let pendingTitle = "";
@@ -1139,8 +1140,8 @@ function calculateEndTime(startId, endId) {
   let h = parseInt(parts[0], 10);
   let m = parseInt(parts[1], 10);
 
-  // 1時間進める
-  h += 1;
+  // 2時間進める
+  h += 2;
 
   // 21時を超える場合は21:00に制限
   if (h >= 21) {
@@ -1358,6 +1359,8 @@ function openModal(res = null, defaultRoomId = null, clickHour = null, clickMin 
     }
   }
   renderShuttleLists(); 
+  isTagDeleteMode = false;
+  renderTitleTags();
   if (modal) modal.scrollTop = 0;
   const modalContent = modal.querySelector('.modal-content');
   if (modalContent) modalContent.scrollTop = 0;
@@ -4028,3 +4031,148 @@ function startMapStatusUpdater() {
 document.addEventListener("DOMContentLoaded", () => {
     startMapStatusUpdater();
 });
+/* ==============================================
+   追加: 用件の定型文タグ入力機能
+   ============================================== */
+function toggleTitleTag(btnElement) {
+    const inputEl = document.getElementById('input-title');
+    const tagText = btnElement.getAttribute('data-tag');
+    let currentText = inputEl.value.trim();
+
+    if (btnElement.classList.contains('active')) {
+        // オフにする: スペース区切りで配列化し、該当するタグを除外して再結合
+        btnElement.classList.remove('active');
+        let textArray = currentText.split(/\s+/);
+        textArray = textArray.filter(text => text !== tagText);
+        inputEl.value = textArray.join(' ');
+    } else {
+        // オンにする: 文字列の末尾に追加 (順番通りに左から並ぶ)
+        btnElement.classList.add('active');
+        if (currentText.length > 0) {
+            inputEl.value = currentText + ' ' + tagText;
+        } else {
+            inputEl.value = tagText;
+        }
+    }
+}
+
+// テキストボックスの内容とボタンの見た目を同期する関数
+function syncTitleTags() {
+    const currentText = document.getElementById('input-title').value;
+    const buttons = document.querySelectorAll('.title-tag-btn');
+    buttons.forEach(btn => {
+        const tagText = btn.getAttribute('data-tag');
+        if (currentText.includes(tagText)) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
+/* ==============================================
+   追加: 定型文タグの動的生成・作成・削除機能
+   ============================================== */
+let isTagDeleteMode = false;
+
+function renderTitleTags() {
+    const container = document.getElementById('title-tags-area');
+    if (!container) return;
+    container.innerHTML = "";
+
+    // データベースから取得したタグをループで生成
+    (masterData.titleTags || []).forEach(tag => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'title-tag-btn';
+        btn.setAttribute('data-tag', tag.tag_name);
+        btn.innerText = tag.tag_name;
+
+        // 削除モード時の見た目
+        if (isTagDeleteMode) {
+            btn.style.border = "1px dashed #c0392b";
+            btn.style.color = "#c0392b";
+            btn.style.backgroundColor = "#fdeaea";
+        }
+
+        btn.onclick = () => {
+            if (isTagDeleteMode) {
+                deleteTitleTagItem(tag.id, tag.tag_name);
+            } else {
+                toggleTitleTag(btn);
+            }
+        };
+        container.appendChild(btn);
+    });
+
+    // 「＋新規作成」ボタン
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'title-tag-btn';
+    addBtn.style.backgroundColor = '#4caf50';
+    addBtn.style.color = 'white';
+    addBtn.style.border = 'none';
+    addBtn.innerText = '＋追加';
+    addBtn.style.opacity = isTagDeleteMode ? "0.3" : "1.0";
+    addBtn.onclick = () => addNewTitleTag();
+    container.appendChild(addBtn);
+
+    // 「×削除」モード切替ボタン
+    if ((masterData.titleTags || []).length > 0) {
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'title-tag-btn';
+        delBtn.style.backgroundColor = isTagDeleteMode ? '#c0392b' : '#e74c3c';
+        delBtn.style.color = 'white';
+        delBtn.style.border = 'none';
+        delBtn.innerText = isTagDeleteMode ? '完了' : '×削除';
+        delBtn.onclick = () => {
+            isTagDeleteMode = !isTagDeleteMode;
+            renderTitleTags();
+        };
+        container.appendChild(delBtn);
+    }
+
+    // 描画が終わったら選択状態を同期
+    if (!isTagDeleteMode) syncTitleTags();
+}
+
+async function addNewTitleTag() {
+    if (isTagDeleteMode) return;
+    const tagName = prompt("新しいタグ名を入力してください\n(例: 【出張】)");
+    if (!tagName || !tagName.trim()) return;
+
+    document.getElementById('loading').style.display = 'flex';
+    const params = {
+        action: 'createTitleTag',
+        tagName: tagName.trim()
+    };
+    
+    const result = await callAPI(params);
+    document.getElementById('loading').style.display = 'none';
+    
+    if (result.status === 'success') {
+        loadAllData(true); // データを再取得して画面更新
+    } else {
+        alert("作成エラー: " + result.message);
+    }
+}
+
+async function deleteTitleTagItem(tagId, tagName) {
+    if (!confirm(`タグ「${tagName}」を削除しますか？\n(全ユーザーの画面から消えます)`)) return;
+
+    document.getElementById('loading').style.display = 'flex';
+    const params = {
+        action: 'deleteTitleTag',
+        tagId: tagId
+    };
+    
+    const result = await callAPI(params);
+    document.getElementById('loading').style.display = 'none';
+    
+    if (result.status === 'success') {
+        isTagDeleteMode = false;
+        loadAllData(true); // データを再取得して画面更新
+    } else {
+        alert("削除エラー: " + result.message);
+    }
+}
