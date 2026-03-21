@@ -1352,9 +1352,6 @@ function openModal(res = null, defaultRoomId = null, clickHour = null, clickMin 
 
     document.getElementById('input-note').value = "";
     document.getElementById('btn-delete').style.display = 'none';
-    if (typeof currentUser !== 'undefined' && currentUser && currentUser.userId) {
-        selectedParticipantIds.add(String(currentUser.userId));
-    }
   }
   renderShuttleLists(); 
   syncTitleTags();
