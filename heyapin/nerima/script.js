@@ -2,8 +2,12 @@
    1. 定数定義 & 設定
    ============================================== */
 const API_URL = "https://z54wdwfu0k.execute-api.ap-northeast-1.amazonaws.com";
-const SESSION_KEY_USER = 'bookingApp_User';
-const SESSION_KEY_TIME = 'bookingApp_LoginTime';  // 保存するキー名(時間)
+// --- ★修正：拠点名をURLから取得 (oji または nerima) ---
+const CURRENT_BRANCH = window.location.pathname.split('/').filter(p => p && p !== 'heyapin')[0] || 'default';
+
+// --- ★修正：キー名に拠点名を付与するように変更 ---
+const SESSION_KEY_USER = `bookingApp_User_${CURRENT_BRANCH}`;
+const SESSION_KEY_TIME = `bookingApp_LoginTime_${CURRENT_BRANCH}`;
 const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000;   
 let pendingExternalData = null; // SS連携データの一時保存用
 let currentViewMode = 'day'; // 'day', 'week', 'month' のいずれか
@@ -219,11 +223,11 @@ function checkAutoLogin() {
 }
 
 function logout() { 
+  // --- ★修正：現在の拠点のキーのみ削除 ---
   localStorage.removeItem(SESSION_KEY_USER);
   localStorage.removeItem(SESSION_KEY_TIME);
   location.reload(); 
 }
-
 async function loadAllData(isUpdate = false, isBackground = false) {
   if (!isBackground) document.getElementById('loading').style.display = 'flex';
   
@@ -260,7 +264,7 @@ async function loadAllData(isUpdate = false, isBackground = false) {
 }
 
 /* --- ▼▼▼ 修正: フィルタ機能（ユーザーID紐付け版） ▼▼▼ --- */
-const FILTER_STORAGE_KEY_BASE = 'roompin_filter_state_v1'; // キーのベース名
+const FILTER_STORAGE_KEY_BASE = 'roompin_filter_state_v2';// キーのベース名
 let activeFilterIds = new Set(['ALL']); // デフォルトは全表示
 
 let viewFilters = {
@@ -272,7 +276,7 @@ let viewFilters = {
 function loadFilterState() {
     if (!currentUser || !currentUser.userId) return;
 
-    const userKey = `${FILTER_STORAGE_KEY_BASE}_${currentUser.userId}`;
+    const userKey = `${FILTER_STORAGE_KEY_BASE}_${CURRENT_BRANCH}_${currentUser.userId}`;
     const saved = localStorage.getItem(userKey);
 
     if (saved) {
@@ -308,13 +312,12 @@ function saveFilterState() {
     // 現在の activeFilterIds を現在のモードの配列として保存
     viewFilters[currentViewMode] = Array.from(activeFilterIds);
 
-    const userKey = `${FILTER_STORAGE_KEY_BASE}_${currentUser.userId}`;
+    const userKey = `${FILTER_STORAGE_KEY_BASE}_${CURRENT_BRANCH}_${currentUser.userId}`;
     const state = {
-        viewFilters: viewFilters,        // モード別の部屋選択リスト
-        currentViewMode: currentViewMode,  // 現在の表示モード
-        highlightId: currentMapRoomId     // ハイライト中の部屋
+        viewFilters: viewFilters,
+        currentViewMode: currentViewMode,
+        highlightId: currentMapRoomId
     };
-    
     localStorage.setItem(userKey, JSON.stringify(state));
 }
 // フィルタボタンを描画する (タイムラインの日付上に表示)
