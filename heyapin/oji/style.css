@@ -649,3 +649,62 @@ button {
 #receive-log-pagination {
     display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 15px; padding-bottom: 20px;
 }
+/* ==============================================
+   追加: 用件の定型文タグボタン
+   ============================================== */
+.title-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: -5px;
+    margin-bottom: 15px;
+}
+.title-tag-btn {
+    background-color: #f1f3f4;
+    color: #5f6368;
+    border: 1px solid #dadce0;
+    border-radius: 16px;
+    padding: 4px 8px; /* ★変更: 上下を4px、左右を8pxに縮小 */
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    outline: none;
+    box-shadow: none !important; 
+}
+.title-tag-btn:hover {
+    background-color: #e8eaed;
+}
+.title-tag-btn.active {
+    background-color: #7f8c8d; /* アクティブ時の濃いグレー */
+    color: white;
+    border-color: #6c757d;
+}
+@media (max-width: 768px) {
+  /* （ここには既存のスマホ用コードがいくつか並んでいます） */
+
+  /* ▼▼▼ ここから追加：スマホ専用の週表示（マトリックス）押しつぶし解消 ▼▼▼ */
+  .matrix-date-col,
+  .sticky-header-item.matrix-header-item {
+    flex: 0 0 120px !important; /* 画面が狭くても絶対に縮ませず、120pxを確保 */
+    min-width: 120px !important;
+    max-width: 120px !important;
+    width: 120px !important;
+  }
+  
+  .sticky-header-item.matrix-header-item {
+    font-size: 0.95rem !important; /* カレンダーの日付文字を少し大きくして見やすく */
+    padding: 0 4px !important;
+  }
+  /* ▲▲▲ 追加ここまで ▲▲▲ */
+  .month-matrix-slot {
+    flex: 0 0 100px !important; /* 画面が狭くても縮ませず、100pxを確保 */
+    width: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
+  }
+  .week-group-container,
+  .week-group-container > div {
+    width: max-content !important;
+    min-width: 100% !important;
+  }
+}
