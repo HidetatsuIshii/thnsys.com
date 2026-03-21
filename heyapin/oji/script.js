@@ -2,8 +2,11 @@
    1. 定数定義 & 設定
    ============================================== */
 const API_URL = "https://eqs6jf6fc5.execute-api.ap-northeast-1.amazonaws.com";
-const SESSION_KEY_USER = 'bookingApp_User';
-const SESSION_KEY_TIME = 'bookingApp_LoginTime';  // 保存するキー名(時間)
+const CURRENT_BRANCH = window.location.pathname.split('/')[2] || 'default';
+
+// --- ★修正：保存キーに拠点名を付与して独立させる ---
+const SESSION_KEY_USER = `bookingApp_User_${CURRENT_BRANCH}`;
+const SESSION_KEY_TIME = `bookingApp_LoginTime_${CURRENT_BRANCH}`;
 const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000;   
 let pendingExternalData = null; // SS連携データの一時保存用
 let currentViewMode = 'day'; // 'day', 'week', 'month' のいずれか
@@ -220,6 +223,7 @@ function checkAutoLogin() {
 }
 
 function logout() { 
+  // SESSION_KEY_USER は既に拠点名が含まれた文字列になっているので、このままでOKです
   localStorage.removeItem(SESSION_KEY_USER);
   localStorage.removeItem(SESSION_KEY_TIME);
   location.reload(); 
@@ -273,7 +277,7 @@ let viewFilters = {
 function loadFilterState() {
     if (!currentUser || !currentUser.userId) return;
 
-    const userKey = `${FILTER_STORAGE_KEY_BASE}_${currentUser.userId}`;
+    const userKey = `${FILTER_STORAGE_KEY_BASE}_${CURRENT_BRANCH}_${currentUser.userId}`;
     const saved = localStorage.getItem(userKey);
 
     if (saved) {
@@ -309,11 +313,11 @@ function saveFilterState() {
     // 現在の activeFilterIds を現在のモードの配列として保存
     viewFilters[currentViewMode] = Array.from(activeFilterIds);
 
-    const userKey = `${FILTER_STORAGE_KEY_BASE}_${currentUser.userId}`;
+    const userKey = `${FILTER_STORAGE_KEY_BASE}_${CURRENT_BRANCH}_${currentUser.userId}`;
     const state = {
-        viewFilters: viewFilters,        // モード別の部屋選択リスト
-        currentViewMode: currentViewMode,  // 現在の表示モード
-        highlightId: currentMapRoomId     // ハイライト中の部屋
+        viewFilters: viewFilters,
+        currentViewMode: currentViewMode,
+        highlightId: currentMapRoomId
     };
     
     localStorage.setItem(userKey, JSON.stringify(state));
