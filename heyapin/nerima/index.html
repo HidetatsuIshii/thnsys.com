@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>部屋ピン</title>
 <link rel="icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=fix04">
+  <link rel="stylesheet" href="style.css?v=fix23">
   <link rel="manifest" href="manifest.json">  
   <link rel="apple-touch-icon" href="icon-192-v4.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -193,9 +193,14 @@
       </tr>
     </table>
 
-    <div class="modal-footer">
-      <button type="button" onclick="closeDetailModal()" class="btn-secondary btn-equal">閉じる</button>
-      <button type="button" id="btn-go-edit" class="btn-primary btn-equal">編集する</button>
+    <div class="modal-footer" style="justify-content: flex-end; gap: 10px;">
+      <button type="button" onclick="closeDetailModal()" class="btn-secondary">閉じる</button>
+
+      <button type="button" onclick="openCopyBookingModal()" style="background-color: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer;">
+        📄 コピー作成
+      </button>
+
+      <button type="button" id="btn-go-edit" class="btn-primary">✎ 編集</button>
     </div>
   </div>
 </div>
@@ -208,26 +213,28 @@
     </div>
     <input type="hidden" id="edit-res-id">
     
-    <div class="form-group">
+    <div class="form-row align-end mb-15 compact-row">
+      <div class="flex-1">
         <label>部屋</label>
-        <select id="input-room"></select>
+        <select id="input-room" style="margin-bottom: 0;"></select>
+      </div>
+      <div class="flex-1">
+        <label for="input-date">日付</label>
+        <input type="date" id="input-date" style="margin-bottom: 0;">
+      </div>
     </div>
 
-    <div class="form-row align-end mb-15">
-      <div class="flex-1-2">
-        <label for="input-date">日付</label>
-        <input type="date" id="input-date">
-      </div>
-
+    <div class="form-row align-end mb-15 compact-row">
       <div class="flex-1">
         <label for="input-start">開始</label>
         <div class="time-picker-wrapper">
           <input type="tel" id="input-start" placeholder="09:00" autocomplete="off"
                  onclick="selectTimePart(this)" 
                  onkeyup="handleTimeArrowKeys(event, this)"
-                 onblur="formatTimeInput(this)">
+                 onblur="formatTimeInput(this)"
+                 style="margin-bottom: 0;">
           <div class="time-picker-arrow">▼</div>
-          </div>
+        </div>
       </div>
 
       <div class="time-range-sep">～</div>
@@ -238,10 +245,22 @@
           <input type="tel" id="input-end" placeholder="10:00" autocomplete="off"
                  onclick="selectTimePart(this)" 
                  onkeyup="handleTimeArrowKeys(event, this)"
-                 onblur="formatTimeInput(this)">
+                 onblur="formatTimeInput(this)"
+                 style="margin-bottom: 0;">
           <div class="time-picker-arrow">▼</div>
         </div>
       </div>
+    </div>
+
+    <div style="margin-bottom: 15px; background: #fff3e0; padding: 10px; border-radius: 6px; border: 1px dashed #ffb74d;">
+        <label style="display: flex; align-items: center; cursor: pointer; margin-bottom: 0; color: #e65100; font-weight: bold;">
+            <input type="checkbox" id="check-tentative" style="width: 20px !important; height: 20px !important; margin: 0 10px 0 0 !important; cursor: pointer; flex-shrink: 0;">
+            仮予約として登録する（重複を許可）
+        </label>
+        <div style="font-size: 0.8rem; color: #d84315; margin-top: 5px; padding-left: 30px;">
+            ※チェックを入れると、他の予定と時間が重なっていても保存できます。<br>
+            ※仮予約はカレンダー上でグレーのストライプ柄で表示されます。
+        </div>
     </div>
 
     <label>用件 (タイトル)</label>
@@ -312,10 +331,15 @@
     </div>
     <label>参加者設定</label>
     <div class="group-container" id="group-buttons-area"></div>
-    
+
     <div class="shuttle-container">
         <div class="shuttle-box">
             <div class="shuttle-header">候補者一覧</div>
+            
+            <div id="branch-tabs" class="branch-tabs-container">
+                <button type="button" class="branch-tab active" onclick="setBranchFilter('nerima', this)">練馬</button>
+                <button type="button" class="branch-tab" onclick="setBranchFilter('next', this)">NEXT</button>
+            </div>
             <div class="shuttle-search">
                 <input type="text" placeholder="名前検索..." id="shuttle-search-input" oninput="renderShuttleLists(this.value)">
             </div>
@@ -470,6 +494,6 @@
   </div>
 </div>
 
-<script src="script.js?v=fix09"></script>
+<script src="script.js?v=fix22"></script>
 </body>
 </html>
