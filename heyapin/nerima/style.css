@@ -387,7 +387,7 @@ button {
   background: #e0e0e0; border: 1px solid #ccc; border-radius: 15px; font-size: 0.75rem; cursor: pointer; transition: 0.2s;
 }
 .group-chip:hover { background: #d5d5d5; }
-.shuttle-container { display: flex; gap: 10px; margin-top: 5px; height: 200px; }
+.shuttle-container { display: flex; gap: 10px; margin-top: 5px; height: 280px; }
 .shuttle-box { flex: 1; border: 1px solid #ddd; display: flex; flex-direction: column; background: #fafafa; border-radius: 4px; }
 .shuttle-header { background: #eee; padding: 5px; font-weight: bold; text-align: center; font-size: 0.8rem; border-bottom: 1px solid #ddd; }
 .shuttle-list { flex: 1; overflow-y: auto; padding: 5px; background: #fff; }
@@ -472,7 +472,7 @@ button {
   
   /* モーダルフォーム調整 */
   .shuttle-container { flex-direction: column; height: auto; }
-  .shuttle-box { height: 200px; }
+  .shuttle-box { height: 280px; }
   #bookingModal .form-row { flex-wrap: wrap; }
   #bookingModal .form-row > div { flex: 1 1 100% !important; margin-bottom: 10px; }
   .avail-search-row { flex-direction: column; align-items: stretch; }
@@ -707,4 +707,244 @@ button {
     width: max-content !important;
     min-width: 100% !important;
   }
+}
+/* ==============================================
+   追加: ドラッグ＆ドロップ時のマウスカーソル
+   ============================================== */
+.v-booking-bar[draggable="true"] {
+    cursor: grab !important; /* つかめる手のアイコン */
+}
+.v-booking-bar[draggable="true"]:active {
+    cursor: grabbing !important; /* つかんでいる手のアイコン */
+}
+.log-table th:nth-child(3),
+.log-table td:nth-child(3) {
+    width: 100px !important; /* 幅を広げる（100〜120px程度が見やすいです） */
+    white-space: normal !important; /* 文字が折り返されるようにする */
+    word-break: break-all !important; /* 長い単語でも強制的に折り返す */
+}
+/* ==============================================
+   追加: 拠点切り替えタブのデザイン（カラム内収容型）
+   ============================================== */
+.branch-tabs-container {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    background: #f1f3f4; /* 既存のヘッダー色に合わせる */
+    position: sticky; /* スクロールしても上部に固定 */
+    top: 0;
+    z-index: 10;
+}
+.branch-tab {
+    flex: 1; /* 2つのボタンで均等に分ける */
+    padding: 8px 0;
+    border: none;
+    border-right: 1px solid #ddd; 
+    border-bottom: 3px solid transparent; /* アクティブ時の線用 */
+    background: transparent;
+    color: #555;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: normal;
+    border-radius: 0; /* 角を丸くしない */
+}
+.branch-tab:last-child {
+    border-right: none; /* 最後のボタンの右線を消す */
+}
+.branch-tab:hover {
+    background: rgba(0,0,0,0.03);
+}
+.branch-tab.active {
+    background: #fff; /* アクティブ時は白にする */
+    color: #3498db; /* 練馬のブルー */
+    border-bottom: 3px solid #3498db; /* 青い下線を追加 */
+    font-weight: bold;
+}
+
+/* スマホ対応: カラムが狭くなった時にタブが崩れないよう、横スクロール可能にする */
+@media (max-width: 768px) {
+    .shuttle-box:first-child {
+        overflow: hidden; /* 親はスクロールさせない */
+    }
+    .branch-tabs-container {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox用 */
+    }
+    .branch-tabs-container::-webkit-scrollbar {
+        display: none; /* Chrome/Safari用 */
+    }
+    .branch-tab {
+        flex: 0 0 100px !important; /* ボタンの幅を固定 */
+        white-space: nowrap !important; /* 文字を折り返さない */
+    }
+}
+/* ==============================================
+   スマホ版の予約フォームレイアウト改善（2行化）
+   ============================================== */
+#bookingModal .compact-row {
+    flex-wrap: nowrap !important;
+}
+#bookingModal .compact-row > div {
+    margin-bottom: 0 !important;
+}
+#bookingModal .compact-row > div.flex-1 {
+    flex: 1 1 0% !important;
+}
+#bookingModal .compact-row .time-range-sep {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    padding: 0 5px !important;
+    margin-bottom: 0 !important;
+}
+
+/* ==============================================
+   候補者一覧リストと備考欄が潰れる問題の修正（スマホ最適化版）
+   ============================================== */
+/* モーダル内の主要ブロックが圧縮されるのを禁止 */
+#bookingModal .modal-content > *,
+.shuttle-container {
+    flex-shrink: 0 !important;
+}
+
+/* 共通の外枠設定 */
+.shuttle-box {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-shrink: 0 !important;
+}
+
+/* ★PC（横並び）の時は、左右の箱の高さを綺麗に揃える */
+@media (min-width: 769px) {
+    .shuttle-container {
+        height: 280px !important; 
+    }
+    .shuttle-box {
+        height: 100% !important;
+        min-height: 280px !important;
+    }
+}
+
+/* ★スマホ（縦並び）の時の個別設定 */
+@media (max-width: 768px) {
+    .shuttle-container {
+        height: auto !important; 
+    }
+    
+    /* 上の箱（候補者一覧）: 4名ほど見える高さに固定 */
+    .shuttle-box:first-child {
+        height: 250px !important; 
+        min-height: 250px !important;
+        max-height: 250px !important;
+    }
+    
+    /* 下の箱（参加予定者）: 0人なら小さく、人数に合わせて自動で伸び縮みする */
+    .shuttle-box.bg-selected {
+        height: auto !important; 
+        min-height: 80px !important;
+        max-height: none !important;
+    }
+    
+    .shuttle-box.bg-selected .shuttle-list {
+        height: auto !important;
+        min-height: 40px !important;
+    }
+}
+
+/* ヘッダーやタブ、検索枠が押し潰されるのを防ぐ */
+.shuttle-header,
+.branch-tabs-container,
+.shuttle-search,
+.shuttle-box > div[style*="height"] {
+    flex-shrink: 0 !important;
+    min-height: min-content !important;
+}
+
+/* タブの余計な固定設定を解除して安全に表示 */
+.branch-tabs-container {
+    position: relative !important;
+    top: auto !important;
+}
+
+/* リスト部分をスクロールさせる */
+.shuttle-list {
+    flex: 1 1 auto !important;
+    min-height: 0 !important; 
+    overflow-y: auto !important;
+}
+
+/* 備考欄（テキストエリア）が潰れないようにする */
+textarea#input-note {
+    min-height: 80px !important;
+    flex-shrink: 0 !important;
+}
+/* ==============================================
+   スマホ版の入力枠（部屋・日付・時間）のサイズと見た目を完全に統一
+   ============================================== */
+#bookingModal .compact-row select,
+#bookingModal .compact-row input {
+    width: 100% !important;
+    height: 44px !important; /* 左右の高さを完全に同じに揃える */
+    background-color: #fff !important; /* スマホ特有のグレー背景を白に強制統一 */
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    box-sizing: border-box !important;
+    font-size: 16px !important; /* 16pxにすることで、タップ時の画面の勝手なズームも防止できます */
+    margin: 0 !important;
+}
+
+/* 部屋（プルダウン）と日付の文字の縦ズレを防ぐための微調整 */
+#bookingModal .compact-row select,
+#bookingModal .compact-row input[type="date"] {
+    padding: 0 10px !important;
+}
+/* ==============================================
+   追加：仮予約（ストライプ柄・右寄せ）のデザイン
+   ============================================== */
+.tentative-booking {
+    background: repeating-linear-gradient(
+        -45deg,
+        #e0e0e0,
+        #e0e0e0 8px,
+        #f5f5f5 8px,
+        #f5f5f5 16px
+    ) !important;
+    border: 1px dashed #999 !important;
+    color: #555 !important;
+    width: 80% !important; /* 横幅を少し狭くする */
+    left: auto !important; /* 左寄せを解除 */
+    right: 2px !important; /* 右側に寄せる */
+    z-index: 6 !important; /* 本予約より少し上に表示 */
+}
+/* ==============================================
+   修正：PC表示時の全画面表示を維持しつつ、マップだけ最大幅を制限
+   ============================================== */
+/* アプリ全体の最大幅制限を解除して画面いっぱいに広げる */
+#app-screen {
+    max-width: 100% !important;
+}
+
+/* ▼▼▼ 修正：マップ画像部分だけは最大幅(1280px)を設けて大きすぎないようにする ▼▼▼ */
+.map-inner-wrapper {
+    max-width: 1280px !important; /* 程よい大きさに制限 */
+    margin-left: auto;   /* 中央寄せ */
+    margin-right: auto;  /* 中央寄せ */
+}
+/* ▲▲▲ 修正ここまで ▲▲▲ */
+/* ==============================================
+   修正：日表示のタイムライン（列）を全画面に広げつつ、太すぎを防止する
+   ============================================== */
+/* 日表示の予約列を画面幅に合わせて均等に広げるが、大きくなりすぎないように制限 */
+.room-col {
+    flex: 1 0 150px !important;
+    min-width: 150px !important;
+    max-width: 250px !important; /* ★変更：週表示の1日分と同じくらいの太さでストップさせる */
+}
+
+/* 日表示のヘッダーも同様に制限 */
+.sticky-header-item:not(.matrix-header-item) {
+    flex: 1 0 150px !important;
+    min-width: 150px !important;
+    max-width: 250px !important; /* ★変更：週表示の1日分と同じくらいの太さでストップさせる */
 }
