@@ -235,7 +235,7 @@ header {
 }
 /* 131行目付近：日表示のヘッダー */
 .sticky-header-item {
-  flex: 0 0 150px !important; /* 固定幅を解除し、均等に広がるように変更 */
+  flex: 1 1 0% !important; /* 固定幅を解除し、均等に広がるように変更 */
   min-width: 0 !important;
   max-width: none !important;
   height: 40px;
@@ -276,7 +276,7 @@ header {
   min-width: 0 !important; /* fit-contentを解除して1画面に収める */
 }
 .room-col {
-  flex: 0 0 150px !important; /* ヘッダーと同じく均等割付に変更 */
+  flex: 1 1 0% !important; /* ヘッダーと同じく均等割付に変更 */
   min-width: 0 !important;
   max-width: none !important;
   border-right: 1px solid #eee;
@@ -931,20 +931,81 @@ textarea#input-note {
     margin-left: auto;   /* 中央寄せ */
     margin-right: auto;  /* 中央寄せ */
 }
-/* ▲▲▲ 修正ここまで ▲▲▲ */
 /* ==============================================
-   修正：日表示のタイムライン（列）を全画面に広げつつ、太すぎを防止する
+   修正：スマホ表示時のみ日表示のタイムライン（列）の幅を45pxに変更
    ============================================== */
-/* 日表示の予約列を画面幅に合わせて均等に広げるが、大きくなりすぎないように制限 */
-.room-col {
-    flex: 1 0 150px !important;
-    min-width: 150px !important;
-    max-width: 250px !important; /* ★変更：週表示の1日分と同じくらいの太さでストップさせる */
-}
+@media (max-width: 768px) {
+    .room-col,
+    .sticky-header-item:not(.matrix-header-item) {
+        flex: 0 0 43px !important;
+        width: 43px !important;
+        min-width: 43px !important;
+        max-width: 43px !important;
+        padding: 2px 1px !important; 
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
 
-/* 日表示のヘッダーも同様に制限 */
-.sticky-header-item:not(.matrix-header-item) {
-    flex: 1 0 150px !important;
-    min-width: 150px !important;
-    max-width: 250px !important; /* ★変更：週表示の1日分と同じくらいの太さでストップさせる */
+    .sticky-header-item:not(.matrix-header-item) {
+        font-size: 8px !important;
+        white-space: normal !important;
+        word-break: break-all !important;
+        line-height: 1.1 !important;
+    }
+
+    /* ▼▼▼ ここから書き換え：予約ブロックの視認性向上 ▼▼▼ */
+    .room-col .v-booking-bar {
+        padding: 2px 1px !important; /* ブロック内の余白を限界まで削る */
+    }
+
+    /* 1行目(時間)と3行目(参加者)は、スマホでは非表示にする */
+    .room-col .v-booking-bar div:nth-child(1),
+    .room-col .v-booking-bar div:nth-child(3) {
+        display: none !important;
+    }
+
+    /* 2行目(タイトル)だけを表示し、折り返して読めるようにする */
+    .room-col .v-booking-bar div:nth-child(2) {
+        display: block !important;
+        white-space: normal !important; /* 横一列の制限を解除し、折り返しを許可 */
+        word-break: break-all !important; /* 枠の端で強制改行 */
+        font-size: 9px !important; /* 読めるギリギリのサイズに少しアップ */
+        line-height: 1.1 !important;
+        overflow: hidden !important;
+        text-overflow: clip !important; /* 「...」を消す */
+    }
+    /* ▼▼▼ 追加：モーダル下部のボタン見切れを修正 ▼▼▼ */
+    .modal-footer {
+        flex-wrap: nowrap !important;
+        gap: 6px !important; /* ボタン間の隙間を少し狭める */
+        padding: 0 5px !important;
+    }
+    
+    .modal-footer button {
+        min-width: 0 !important; /* 120px固定を解除 */
+        flex: 1 1 0% !important; /* 3つのボタンを均等幅にする */
+        padding: 12px 2px !important; /* 左右の余白を削る */
+        font-size: 12px !important; /* スマホ向けに少し文字を小さく */
+        white-space: nowrap !important;
+    }
+    /* ▲▲▲ 追加ここまで ▲▲▲ */
+    /* ▲▲▲ 書き換えここまで ▲▲▲ */
+}
+/* ==============================================
+   追加：カラーパレットのデザイン
+   ============================================== */
+.color-choice-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+}
+.color-choice-btn:hover {
+    transform: scale(1.1);
+}
+.color-choice-btn.selected {
+    border-color: #333; /* 選択された色には黒いフチをつける */
+    transform: scale(1.1);
 }
