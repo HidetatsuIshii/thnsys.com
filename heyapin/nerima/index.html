@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>部屋ピン</title>
 <link rel="icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=fix23">
+  <link rel="stylesheet" href="style.css?v=fix48">
   <link rel="manifest" href="manifest.json">  
   <link rel="apple-touch-icon" href="icon-192-v4.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -494,6 +494,31 @@
   </div>
 </div>
 
-<script src="script.js?v=fix22"></script>
+<div id="tagColorSettingModal" class="modal">
+  <div class="modal-content modal-md">
+    <div class="modal-top-bar">
+      <h3>用件キーワードの色設定</h3>
+      <span class="close-icon" onclick="closeTagColorSettingModal()">&times;</span>
+    </div>
+    
+    <p style="font-size:0.85rem; color:#666; margin-bottom:15px;">
+      用件（タイトル）に特定のキーワードが含まれている時、予約ブロックのフチと背景色を自動で変更します。
+    </p>
+
+    <label>用件名（キーワード）</label>
+    <input type="text" id="input-new-color-tag-name" placeholder="例: 契約、来客、外出 など">
+
+    <label style="margin-top: 15px;">色の選択</label>
+    <div id="tag-color-palette" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+      </div>
+    
+    <div class="modal-footer justify-end" style="border-top: 1px solid #eee; padding-top: 10px; margin-top: 15px;">
+      <button type="button" class="btn-secondary" onclick="closeTagColorSettingModal()">キャンセル</button>
+      <button type="button" class="btn-primary" onclick="saveNewTagWithColor()">登録する</button>
+    </div>
+
+  </div>
+</div>
+<script src="script.js?v=fix34"></script>
 </body>
 </html>
