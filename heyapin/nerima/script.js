@@ -4188,7 +4188,8 @@ function renderTitleTags() {
 
         btn.onclick = () => {
             if (isTagDeleteMode) {
-                deleteTitleTagItem(tag.id, tag.tag_name);
+                // ★修正：データベースのID (tag.id) も一緒に渡す
+                deleteTitleTag(tag.id, tag.tag_name, btn);
             } else {
                 toggleTitleTag(btn);
             }
@@ -4235,23 +4236,52 @@ function addNewTitleTag() {
     openTagColorSettingModal();
 }
 
-async function deleteTitleTagItem(tagId, tagName) {
-    if (!confirm(`タグ「${tagName}」を削除しますか？\n(全ユーザーの画面から消えます)`)) return;
+// ★修正：受け取る項目に tagId を追加
+async function deleteTitleTag(tagId, tagName, btn) {
+    if (!confirm(`定型文「${tagName}」を削除しますか？`)) return;
 
     document.getElementById('loading').style.display = 'flex';
+    
+    // ★修正：サーバーに送信するデータにIDを含める
     const params = {
         action: 'deleteTitleTag',
-        tagId: tagId
+        id: tagId,       // APIの仕様に合わせて念のためidとして送信
+        tagId: tagId,    // APIの仕様に合わせて念のためtagIdとしても送信
+        tagName: tagName
     };
     
-    const result = await callAPI(params);
-    document.getElementById('loading').style.display = 'none';
-    
-    if (result.status === 'success') {
-        isTagDeleteMode = false;
-        loadAllData(true); // データを再取得して画面更新
-    } else {
-        alert("削除エラー: " + result.message);
+    try {
+        const result = await callAPI(params);
+        document.getElementById('loading').style.display = 'none';
+        
+        if (result.status === 'success') {
+            // 見た目だけでなく、ブラウザが記憶している裏側のデータからも確実に消す
+            if (masterData && masterData.titleTags) {
+                // ★名前ではなく、確実なIDを使って一致するものを消去する
+                masterData.titleTags = masterData.titleTags.filter(tag => tag.id !== tagId);
+            }
+            
+            // 画面のボタンを消す
+            if (btn) {
+                btn.remove();
+            }
+            
+            // 削除が終わったら、自動的に「削除モード」を解除する
+            if (typeof isTagDeleteMode !== 'undefined' && isTagDeleteMode) {
+                const tagsArea = document.getElementById('title-tags-area');
+                if (tagsArea) {
+                    const deleteBtn = Array.from(tagsArea.querySelectorAll('button')).find(b => b.innerText.includes('完了'));
+                    if (deleteBtn) {
+                        deleteBtn.click(); 
+                    }
+                }
+            }
+        } else {
+            alert("削除に失敗しました: " + result.message);
+        }
+    } catch(e) {
+        document.getElementById('loading').style.display = 'none';
+        alert("通信エラーが発生しました");
     }
 }
 /* ==============================================
