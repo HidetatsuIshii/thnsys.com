@@ -1095,6 +1095,8 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
                      }
                 }
 
+                applyCustomTagColor(bar, displayTitle);
+
                 bar.innerHTML = `
                       <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${timeRangeStr}</div>
                       <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayTitle}</div>
@@ -3777,6 +3779,8 @@ function renderMatrixMonthTimeline(mode, shouldScroll) {
                     bar.addEventListener('dragstart', handleDragStart);
                     bar.addEventListener('dragend', handleDragEnd);
                     
+                    applyCustomTagColor(bar, title);
+
                     bar.innerHTML = `
                           <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tStr}</div>
                           <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
@@ -4224,25 +4228,11 @@ function renderTitleTags() {
     if (!isTagDeleteMode) syncTitleTags();
 }
 
-async function addNewTitleTag() {
+function addNewTitleTag() {
     if (isTagDeleteMode) return;
-    const tagName = prompt("新しいタグ名を入力してください\n(例: 【出張】)");
-    if (!tagName || !tagName.trim()) return;
-
-    document.getElementById('loading').style.display = 'flex';
-    const params = {
-        action: 'createTitleTag',
-        tagName: tagName.trim()
-    };
     
-    const result = await callAPI(params);
-    document.getElementById('loading').style.display = 'none';
-    
-    if (result.status === 'success') {
-        loadAllData(true); // データを再取得して画面更新
-    } else {
-        alert("作成エラー: " + result.message);
-    }
+    // 古い文字入力ダイアログ(prompt)を廃止し、新しい色設定専用モーダルを開く
+    openTagColorSettingModal();
 }
 
 async function deleteTitleTagItem(tagId, tagName) {
@@ -4513,4 +4503,241 @@ function openCopyBookingModal() {
     // 6. 画面のリストやタグの見た目を更新
     renderShuttleLists(); 
     syncTitleTags();
+}
+/* ==============================================
+   追加：用件キーワード色設定モーダルのプログラム（完成版）
+   ============================================== */
+let customTagColors = {}; // ユーザーが設定した色を記憶する変数
+const TAG_COLORS_STORAGE_KEY = 'roompin_tag_colors_v1';
+
+// 初期ロード時にブラウザから設定を読み込む
+function loadCustomTagColors() {
+    const saved = localStorage.getItem(TAG_COLORS_STORAGE_KEY);
+    if (saved) {
+        try { customTagColors = JSON.parse(saved); } 
+        catch (e) { customTagColors = {}; }
+    }
+}
+loadCustomTagColors(); // スクリプト読み込み時に即時実行
+
+let selectedTagColor = ''; 
+
+function openTagColorSettingModal() {
+    document.getElementById('input-new-color-tag-name').value = '';
+    selectedTagColor = ''; 
+    generateTagColorPalette();
+    const modal = document.getElementById('tagColorSettingModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeTagColorSettingModal() {
+    const modal = document.getElementById('tagColorSettingModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function handleTagColorSelect(clickedBtn, color) {
+    const allBtns = document.querySelectorAll('.color-choice-btn');
+    allBtns.forEach(btn => btn.classList.remove('selected'));
+    const picker = document.getElementById('custom-color-picker');
+    if(picker) picker.style.boxShadow = 'none';
+
+    if (clickedBtn.tagName === 'INPUT') {
+        clickedBtn.style.boxShadow = '0 0 0 2px #333';
+    } else {
+        clickedBtn.classList.add('selected');
+        if(picker) picker.value = color; 
+    }
+    selectedTagColor = color; 
+}
+
+// ★色を背景色（透明度あり）に変換して塗るための補助機能
+function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+function applyCustomTagColor(bar, titleText) {
+    if (!titleText) return;
+    
+    let firstKeyword = null;
+    let firstIndex = -1;
+
+    // 登録されている全てのキーワードをチェックし、一番手前（左側）にあるものを探す
+    for (const keyword in customTagColors) {
+        const index = titleText.indexOf(keyword);
+        if (index !== -1) {
+            // まだ見つかっていないか、より手前で見つかった言葉を「一番手前」として記憶する
+            if (firstIndex === -1 || index < firstIndex) {
+                firstIndex = index;
+                firstKeyword = keyword;
+            }
+        }
+    }
+
+    // 一番手前にあったキーワードの色を塗る
+    if (firstKeyword) {
+        const color = customTagColors[firstKeyword];
+        bar.style.borderTop = `4px solid ${color}`;
+        bar.style.backgroundColor = hexToRgba(color, 0.15);
+    }
+}
+// カラーパレット（エクセル風の基本色 ＋ その他の色）を生成
+function generateTagColorPalette() {
+    const paletteArea = document.getElementById('tag-color-palette');
+    if (!paletteArea) return;
+    paletteArea.innerHTML = ''; 
+
+    // エクセルによくある基本色を多めに用意
+    const PREDEFINED_TAG_COLORS = [
+        '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#27ae60', '#1abc9c',
+        '#3498db', '#2980b9', '#9b59b6', '#ef5585', '#34495e', '#95a5a6'
+    ];
+
+    PREDEFINED_TAG_COLORS.forEach(color => {
+        const btn = document.createElement('div');
+        btn.className = 'color-choice-btn';
+        btn.style.backgroundColor = color;
+        btn.onclick = () => handleTagColorSelect(btn, color);
+        paletteArea.appendChild(btn);
+    });
+
+    // 「その他の色」ピッカー（自由選択）と文字入力欄を追加
+    const customWrapper = document.createElement('div');
+    customWrapper.style.display = 'flex';
+    customWrapper.style.alignItems = 'center';
+    customWrapper.style.gap = '5px';
+    customWrapper.style.marginLeft = '10px';
+    customWrapper.style.paddingLeft = '10px';
+    customWrapper.style.borderLeft = '1px solid #ccc';
+
+    const customInput = document.createElement('input');
+    customInput.type = 'color'; // OS標準のカラーピッカー
+    customInput.id = 'custom-color-picker';
+    customInput.value = '#000000'; 
+    customInput.style.width = '32px';
+    customInput.style.height = '32px';
+    customInput.style.padding = '0';
+    customInput.style.border = 'none';
+    customInput.style.cursor = 'pointer';
+    customInput.style.background = 'transparent';
+    
+    // ▼▼▼ 追加：文字で色を入力できるボックス（ef5585のような入力に対応） ▼▼▼
+    const hexInput = document.createElement('input');
+    hexInput.type = 'text';
+    hexInput.placeholder = '例: ef5585';
+    hexInput.style.width = '75px';
+    hexInput.style.padding = '4px 6px';
+    hexInput.style.border = '1px solid #ccc';
+    hexInput.style.borderRadius = '4px';
+    hexInput.style.fontSize = '0.85rem';
+
+    // カラーピッカーを触った時の動き（文字入力欄も連動させる）
+    const syncFromPicker = (e) => {
+        handleTagColorSelect(customInput, e.target.value);
+        hexInput.value = e.target.value; // 文字欄にも反映
+    };
+    customInput.onclick = syncFromPicker;
+    customInput.oninput = syncFromPicker;
+
+    // 文字入力欄に「ef5585」などを打ち込んだ時の動き
+    hexInput.oninput = (e) => {
+        let val = e.target.value.trim();
+        // #がなければ自動で付ける
+        if (val.length > 0 && !val.startsWith('#')) {
+            val = '#' + val; 
+        }
+        // 6桁の色コードとして正しければ反映（大文字小文字どちらでもOK）
+        if (/^#[0-9A-F]{6}$/i.test(val)) {
+            customInput.value = val; // パレットの色を変える
+            handleTagColorSelect(customInput, val); // 選択状態にする
+        }
+    };
+
+    customWrapper.appendChild(customInput);
+    customWrapper.appendChild(hexInput); // 今までの「その他の色...」という文字の代わりに入力欄を置く
+    paletteArea.appendChild(customWrapper);
+}
+// 登録ボタンを押した時の処理（既存タグの更新 ＆ 新規タグの作成）
+// 登録ボタンを押した時の処理（既存タグの更新 ＆ 新規タグの作成）
+async function saveNewTagWithColor() {
+    const keyword = document.getElementById('input-new-color-tag-name').value.trim();
+    if (!keyword || !selectedTagColor) {
+        alert('キーワードと色を両方選択してください。\n※「その他の色」を使う場合は、一度そのアイコンをクリックしてください。');
+        return;
+    }
+    
+    // 1. 色をブラウザに記憶させる
+    customTagColors[keyword] = selectedTagColor;
+    localStorage.setItem(TAG_COLORS_STORAGE_KEY, JSON.stringify(customTagColors));
+    
+    // ★追加：既存のキーワードかどうかをチェックする
+    const tagsArea = document.getElementById('title-tags-area');
+    let exists = false;
+    if (tagsArea) {
+        const btns = tagsArea.querySelectorAll('button');
+        btns.forEach(btn => { 
+            // ボタンの文字と完全一致するかチェック
+            if (btn.innerText.trim() === keyword || btn.getAttribute('data-tag') === keyword) {
+                exists = true; 
+            }
+        });
+    }
+
+    if (exists) {
+        // ★既存のキーワードなら、サーバーに追加する必要はないので色だけ塗って完了！
+        closeTagColorSettingModal();
+        if (typeof refreshUI === 'function') refreshUI();
+        return; 
+    }
+    
+    // 2. 新しいキーワードの場合のみ、定型文タグ（ボタン）としてサーバーに保存する
+    document.getElementById('loading').style.display = 'flex';
+    const params = {
+        action: 'createTitleTag',
+        tagName: keyword
+    };
+    
+    try {
+        const result = await callAPI(params);
+        document.getElementById('loading').style.display = 'none';
+        
+        if (result.status === 'success') {
+            closeTagColorSettingModal(); 
+            await loadAllData(true); 
+            if (typeof refreshUI === 'function') refreshUI(); 
+            
+            if (tagsArea) {
+                const newBtn = document.createElement('button');
+                newBtn.type = 'button';
+                newBtn.className = 'title-tag-btn'; 
+                newBtn.setAttribute('data-tag', keyword); 
+                newBtn.innerText = keyword;
+                
+                newBtn.onclick = () => {
+                    if (typeof toggleTitleTag === 'function') {
+                        toggleTitleTag(newBtn);
+                    } else {
+                        const titleInput = document.getElementById('input-title');
+                        if (titleInput) titleInput.value = keyword;
+                    }
+                    if (typeof syncTitleTags === 'function') syncTitleTags();
+                };
+                
+                const addBtn = Array.from(tagsArea.querySelectorAll('button')).find(b => b.innerText.includes('＋追加'));
+                if (addBtn) {
+                    tagsArea.insertBefore(newBtn, addBtn);
+                } else {
+                    tagsArea.appendChild(newBtn);
+                }
+            }
+        } else {
+            closeTagColorSettingModal(); 
+            if (typeof refreshUI === 'function') refreshUI(); 
+            alert(`色は保存されましたが、タグの追加に失敗しました: ${result.message}`);
+        }
+    } catch(e) {
+        document.getElementById('loading').style.display = 'none';
+        alert("通信エラーが発生しました");
+    }
 }
