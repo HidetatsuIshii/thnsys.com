@@ -1,7 +1,7 @@
 /* ==============================================
    1. 定数定義 & 設定
    ============================================== */
-const API_URL = "https://reiafc2mje.execute-api.ap-northeast-1.amazonaws.com";
+const API_URL = "https://qjmcdwjdzk.execute-api.ap-northeast-1.amazonaws.com";
 // --- ★修正：拠点名をURLから取得 (oji または nerima) ---
 const CURRENT_BRANCH = window.location.pathname.split('/').filter(p => p && p !== 'heyapin')[0] || 'default';
 
