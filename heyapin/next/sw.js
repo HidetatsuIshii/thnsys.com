@@ -1,4 +1,4 @@
-const CACHE_NAME = 'roompin-cache-v-fix13';
+const CACHE_NAME = 'roompin-cache-v-fix14';
 // ▲▲▲ 変更ここまで ▲▲▲
 
 const urlsToCache = [
@@ -40,7 +40,7 @@ self.addEventListener('activate', (event) => {
     return self.clients.claim(); // ページをすぐにコントロール下に置く
 });
 
-// フェッチ処理（オフライン対応）
+// フェッチ処理（ネットワーク優先・オフライン対応）
 self.addEventListener('fetch', (event) => {
     // API通信や外部通信はキャッシュせずネットワークへ
     if (event.request.url.includes('amazonaws.com')) {
@@ -48,24 +48,27 @@ self.addEventListener('fetch', (event) => {
     }
 
     event.respondWith(
-        caches.match(event.request).then((response) => {
-            // 1. キャッシュにあればそれを返す
-            if (response) {
-                return response;
-            }
-
-            // 2. キャッシュになくても、ルートへのアクセスなら index.html を返す
-            // (S3などで / にアクセスした際、オフラインでも index.html を表示させるため)
-            const url = new URL(event.request.url);
-            if (url.pathname.endsWith('/') || url.pathname.endsWith('/index.html')) {
-                return caches.match('./index.html').then((cacheResponse) => {
-                    // キャッシュに index.html があればそれを返し、無ければネットワークへ取りに行く
-                    return cacheResponse || fetch(event.request);
-                });
-            }
-
-            // 3. なければネットワークに取りに行く
-            return fetch(event.request);
+        // 1. まずはネットワーク（サーバー）から最新版を取得しにいく
+        fetch(event.request).then((networkResponse) => {
+            // 取得に成功したら、次回オフラインになった時のためにキャッシュも最新化しておく
+            return caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, networkResponse.clone());
+                return networkResponse;
+            });
+        }).catch(() => {
+            // 2. もしオフライン等で通信エラーになった場合は、キャッシュを探す
+            return caches.match(event.request).then((cacheResponse) => {
+                if (cacheResponse) {
+                    return cacheResponse;
+                }
+                // 3. キャッシュにもない場合で、ルートアクセスなら index.html を返す
+                const url = new URL(event.request.url);
+                if (url.pathname.endsWith('/') || url.pathname.endsWith('/index.html')) {
+                    return caches.match('./index.html').then((fallbackResponse) => {
+                         return fallbackResponse;
+                    });
+                }
+            });
         })
     );
 });
