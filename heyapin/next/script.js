@@ -2141,8 +2141,12 @@ function renderLogs() {
 
     const parseUtcDate = (str) => {
         if (!str) return null;
-        // Lambdaから既に日本時間(JST)として届いているため、Z(UTC)を付けずにそのまま読み込む
-        return new Date(String(str).trim().replace(/-/g, '/'));
+        // サーバーからUTC時間で届いてしまっているため、強制的に9時間足して日本時間(JST)に補正する
+        const d = new Date(String(str).trim().replace(/-/g, '/'));
+        if (!isNaN(d.getTime())) {
+            d.setHours(d.getHours() + 9);
+        }
+        return d;
     };
 
     // 並び替え処理
