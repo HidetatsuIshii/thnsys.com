@@ -1,22 +1,23 @@
 /* ==============================================
    1. 定数定義 & 設定
    ============================================== */
-const API_URL = "https://qjmcdwjdzk.execute-api.ap-northeast-1.amazonaws.com"; 
-// URLから /oji/ または /nerima/ を抽出する
+const API_URL = "https://reiafc2mje.execute-api.ap-northeast-1.amazonaws.com";
+// --- ★修正：拠点名をURLから取得 (oji または nerima) ---
 const CURRENT_BRANCH = window.location.pathname.split('/').filter(p => p && p !== 'heyapin')[0] || 'default';
 
-// キー名に拠点名を結合して独立させる
+// --- ★修正：キー名に拠点名を付与するように変更 ---
 const SESSION_KEY_USER = `bookingApp_User_${CURRENT_BRANCH}`;
 const SESSION_KEY_TIME = `bookingApp_LoginTime_${CURRENT_BRANCH}`;
-const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000;   
+const SESSION_DURATION = 15 * 24 * 60 * 60 * 1000;   
 let pendingExternalData = null; // SS連携データの一時保存用
+let currentViewMode = 'day'; // 'day', 'week', 'month' のいずれか
+let activeBranchFilter = 'nerima'; // ★追加: 候補者リストの初期タブ状態
 
-// Base64画像データ (省略)
 const IMG_7F = "data:image/png;base64,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"
 const IMG_6F = "data:image/png;base64,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"
 
 const mapConfig = {
-    7: {
+    hq: { // ★ここを 7 から hq に変更しています
         image: IMG_7F, 
         areas: [
             { id: "Z 角", name: "Z 角", top: 11.1, left: 0.0, width: 12.0, height: 7.1, color: "rgba(0, 100, 255, 0.3)" },
@@ -42,21 +43,32 @@ const mapConfig = {
         ]
     }
 };
-
 const START_HOUR = 7;
 const END_HOUR = 22;
 const BASE_HOUR_HEIGHT = 100; 
 
 let currentUser = null;
-let masterData = { rooms: [], users: [], reservations: [], logs: [], groups: [] };
+// 全ての項目を [] (空の配列) で初期化し、データが無くてもエラーにならないようにします
+let masterData = { 
+  rooms: [], 
+  users: [], 
+  reservations: [], 
+  logs: [], 
+  groups: [],
+  returnReports: [], 
+  allReturnReports: [] ,
+  titleTags: []
+};
+let activeReportId = null;
+let pendingTitle = "";
 
 // 状態管理変数
 let selectedParticipantIds = new Set();
 let groupCreateSelectedIds = new Set();
 let originalParticipantIds = new Set();
 let currentMapRoomId = null; 
-let currentFloor = 7; 
-let currentTimelineFloor = 7;
+let currentFloor = 'hq'; 
+let currentTimelineFloor = 'hq';
 let currentLogPage = 1;
 const LOGS_PER_PAGE = 50;
 let isDeleteMode = false;
@@ -69,11 +81,11 @@ let notifiedReservationIds = new Set();
    2. 初期化 & API通信
    ============================================== */
 window.onload = () => {
-  // ▼▼▼ 修正: SW更新時に自動リロードする処理 ▼▼▼
   if ('serviceWorker' in navigator) {
-    // 1. Service Workerを登録
     navigator.serviceWorker.register('sw.js').then(reg => {
-      // 登録成功
+      // ▼▼▼ 追加：ページ読み込みのたびにSWの更新があるか確認する ▼▼▼
+      reg.update(); 
+      console.log('SW登録成功');
     }).catch(err => console.error('SW登録失敗', err));
 
     // 2. コントローラー（SW）が切り替わったらリロードする
@@ -141,37 +153,51 @@ async function callAPI(params) {
 }
 
 async function tryLogin() {
-  const id = document.getElementById('loginId').value.trim();
-  const pass = document.getElementById('loginPass').value.trim();
-  if(!id || !pass) return;
-  document.getElementById('loading').style.display = 'flex';
-  
-  const url = new URL(API_URL);
-  url.searchParams.append('action', 'login');
-  url.searchParams.append('userId', id);
-  url.searchParams.append('password', pass);
-  try {
-    const res = await fetch(url.toString(), { method: 'GET', headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
-    const json = await res.json();
-    document.getElementById('loading').style.display = 'none';
+    // フォームから値を取得し、即座にトリム
+    const idInput = document.getElementById('loginId');
+    const passInput = document.getElementById('loginPass');
     
-    if (json.status === 'success') {
-      currentUser = json.user;
-      document.getElementById('display-user-name').innerText = currentUser.userName;
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app-screen').style.display = 'flex'; 
-      
-      localStorage.setItem(SESSION_KEY_USER, JSON.stringify(currentUser));
-      localStorage.setItem(SESSION_KEY_TIME, new Date().getTime().toString());
+    const id = idInput.value.trim();
+    const pass = passInput.value.trim();
 
-      loadAllData();
-    } else { 
-      alert("ログイン失敗: " + json.message); 
+    if(!id || !pass) {
+        alert("IDとパスワードを入力してください");
+        return;
     }
-  } catch (e) {
-    document.getElementById('loading').style.display = 'none';
-    alert("通信エラー: " + e.message);
-  }
+
+    document.getElementById('loading').style.display = 'flex';
+    
+    // fetchのbodyとして確実にJSONを送信
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'login',
+                userId: id,
+                password: pass
+            })
+        });
+
+        const json = await response.json();
+        document.getElementById('loading').style.display = 'none';
+        
+        if (json.status === 'success') {
+            currentUser = json.user;
+            document.getElementById('display-user-name').innerText = currentUser.userName;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'flex'; 
+            
+            localStorage.setItem(SESSION_KEY_USER, JSON.stringify(currentUser));
+            localStorage.setItem(SESSION_KEY_TIME, new Date().getTime().toString());
+            loadAllData();
+        } else { 
+            alert(json.message); 
+        }
+    } catch (e) {
+        document.getElementById('loading').style.display = 'none';
+        alert("通信エラーが発生しました");
+    }
 }
 
 function checkAutoLogin() {
@@ -202,12 +228,11 @@ function checkAutoLogin() {
 }
 
 function logout() { 
-  // SESSION_KEY_USER は既に拠点名が含まれた値になっているのでそのままでOK
+  // --- ★修正：現在の拠点のキーのみ削除 ---
   localStorage.removeItem(SESSION_KEY_USER);
   localStorage.removeItem(SESSION_KEY_TIME);
   location.reload(); 
 }
-
 async function loadAllData(isUpdate = false, isBackground = false) {
   if (!isBackground) document.getElementById('loading').style.display = 'flex';
   
@@ -221,19 +246,33 @@ async function loadAllData(isUpdate = false, isBackground = false) {
     
     if (!isBackground) document.getElementById('loading').style.display = 'none';
 
-    if (json.status === 'success') {
-      masterData = json.data;
+   if (json.status === 'success') {
+      // ▼▼▼ ここから追加：他拠点のユーザー名に拠点マークを自動付与 ▼▼▼
+      if (json.data && json.data.users) {
+          json.data.users.forEach(u => {
+              // 所属(branch)が空ではなく、かつ「練馬(nerima)」ではない場合
+              if (u.branch && u.branch !== 'nerima') {
+                  // branch名（例: next）を大文字にして【NEXT】というバッジを作る
+                  let prefix = '【' + u.branch.toUpperCase() + '】';
+                  // まだバッジが付いていなければ名前にくっつける
+                  if (!u.userName.startsWith(prefix)) {
+                      u.userName = prefix + u.userName;
+                  }
+              }
+          });
+      }
+      // 既存の masterData のプロパティを維持しつつ、届いたデータでマージする
+      masterData = {
+          ...masterData,
+          ...json.data
+      };
+      
       if (isUpdate) {
-         if (!isBackground) {
-             refreshUI();
-         }
+         refreshUI();
       } else {
          initUI();
-         // ▼▼▼ ★ここに追加: 初回ロード時のみ、URLパラメータをチェックして予約画面を開く ▼▼▼
          checkUrlParamsForBooking(); 
-         // ▲▲▲ 追加ここまで ▲▲▲
       }
-      if (typeof checkReturnNotifications === 'function') checkReturnNotifications();
     } else { 
       if (!isBackground) alert("読込エラー: " + json.message); 
     }
@@ -244,48 +283,64 @@ async function loadAllData(isUpdate = false, isBackground = false) {
 }
 
 /* --- ▼▼▼ 修正: フィルタ機能（ユーザーID紐付け版） ▼▼▼ --- */
-const FILTER_STORAGE_KEY_BASE = 'roompin_filter_state_v1'; // キーのベース名
+const FILTER_STORAGE_KEY_BASE = 'roompin_filter_state_v2';// キーのベース名
 let activeFilterIds = new Set(['ALL']); // デフォルトは全表示
 
-// 1. フィルタ状態を読み込む (ユーザーIDを使って専用の保存データを取得)
+let viewFilters = {
+    day: ['ALL'],
+    week: ['ALL'],
+    month: ['ALL']
+};
+
 function loadFilterState() {
-  // まだユーザー情報がない場合（ログイン前など）はデフォルトに戻す
-  if (!currentUser || !currentUser.userId) {
-      activeFilterIds = new Set(['ALL']);
-      return;
-  }
+    if (!currentUser || !currentUser.userId) return;
 
-  // キー名にユーザーIDを付与する (例: roompin_filter_state_v1_user001)
-   if (!currentUser || !currentUser.userId) return;
-  const userKey = `${FILTER_STORAGE_KEY_BASE}_${CURRENT_BRANCH}_${currentUser.userId}`;
-  const saved = localStorage.getItem(userKey);
+    const userKey = `${FILTER_STORAGE_KEY_BASE}_${CURRENT_BRANCH}_${currentUser.userId}`;
+    const saved = localStorage.getItem(userKey);
 
-  if (saved) {
-    try {
-      const arr = JSON.parse(saved);
-      if (Array.isArray(arr) && arr.length > 0) {
-        activeFilterIds = new Set(arr);
-        return;
-      }
-    } catch (e) { console.error("フィルタ読み込みエラー", e); }
-  }
-  
-  // 保存データがない場合は「全部屋」にする
-  activeFilterIds = new Set(['ALL']);
+    if (saved) {
+        try {
+            const state = JSON.parse(saved);
+            // モードごとのフィルターを復元
+            if (state.viewFilters) {
+                viewFilters = state.viewFilters;
+            }
+            // 最後に開いていた表示モードを復元
+            if (state.currentViewMode) {
+                currentViewMode = state.currentViewMode;
+            }
+            // ハイライトIDは共通または必要に応じて復元
+            if (state.highlightId) {
+                currentMapRoomId = state.highlightId;
+            }
+
+            // 現在のモードのフィルターを activeFilterIds にセット
+            activeFilterIds = new Set(viewFilters[currentViewMode] || ['ALL']);
+        } catch (e) {
+            console.error("フィルター読み込みエラー", e);
+            activeFilterIds = new Set(['ALL']);
+        }
+    } else {
+        activeFilterIds = new Set(['ALL']);
+    }
 }
 
-// 2. フィルタ状態を保存する (ユーザーIDごとのキーで保存)
 function saveFilterState() {
-  // ユーザー情報がない場合は保存しない
-  if (!currentUser || !currentUser.userId) return;
+    if (!currentUser || !currentUser.userId) return;
 
-  const userKey = `${FILTER_STORAGE_KEY_BASE}_${CURRENT_BRANCH}_${currentUser.userId}`;
-  localStorage.setItem(userKey, JSON.stringify(Array.from(activeFilterIds)));
+    // 現在の activeFilterIds を現在のモードの配列として保存
+    viewFilters[currentViewMode] = Array.from(activeFilterIds);
+
+    const userKey = `${FILTER_STORAGE_KEY_BASE}_${CURRENT_BRANCH}_${currentUser.userId}`;
+    const state = {
+        viewFilters: viewFilters,
+        currentViewMode: currentViewMode,
+        highlightId: currentMapRoomId
+    };
+    localStorage.setItem(userKey, JSON.stringify(state));
 }
-
 // フィルタボタンを描画する (タイムラインの日付上に表示)
 function renderTimelineFilters() {
-  // ★重要: HTMLに追加した新しいID 'timeline-filter-row' を指定
   const container = document.getElementById('timeline-filter-row');
   if (!container) return;
   container.innerHTML = "";
@@ -293,12 +348,14 @@ function renderTimelineFilters() {
   // 「全部屋」ボタン
   const allBtn = document.createElement('div');
   const isAll = activeFilterIds.has('ALL');
-  // ★クラス名を 'filter-btn' に変更 (CSSに合わせる)
   allBtn.className = 'filter-btn btn-all' + (isAll ? ' active' : '');
   allBtn.innerText = "全部屋";
+  /* script.js : renderTimelineFilters 関数内 */
   allBtn.onclick = () => {
+    // --- 修正: 週表示の時に日表示へ戻してしまう制限を削除 ---
     activeFilterIds.clear();
     activeFilterIds.add('ALL');
+    currentMapRoomId = null; 
     saveFilterState();
     renderTimelineFilters();
     renderVerticalTimeline('map'); 
@@ -307,19 +364,18 @@ function renderTimelineFilters() {
 
   // 各部屋のボタン
   if (masterData && masterData.rooms) {
-    // 見やすいように部屋名でソート
-    const sortedRooms = [...masterData.rooms].sort((a, b) => a.roomName.localeCompare(b.roomName, 'ja'));
+    const sortedRooms = [...masterData.rooms].sort((a, b) => a.roomName.localeCompare(b.roomName, 'ja', { numeric: true }));
 
     sortedRooms.forEach(room => {
       const rId = String(room.roomId);
       const btn = document.createElement('div');
       const isActive = activeFilterIds.has(rId);
       
-      // ★クラス名を 'filter-btn' に変更
       btn.className = 'filter-btn' + (isActive ? ' active' : '');
       btn.innerText = room.roomName;
       
       btn.onclick = () => {
+        // --- 修正: 週表示の時だけ単一選択にするロジックを削除し、一律でトグル処理にする ---
         if (activeFilterIds.has('ALL')) {
           activeFilterIds.clear();
           activeFilterIds.add(rId);
@@ -330,9 +386,14 @@ function renderTimelineFilters() {
             activeFilterIds.add(rId);
           }
         }
-
+        
         if (activeFilterIds.size === 0) {
           activeFilterIds.add('ALL');
+          currentMapRoomId = null;
+        }
+
+        if (activeFilterIds.has(rId)) {
+            currentMapRoomId = rId;
         }
 
         saveFilterState();
@@ -344,20 +405,49 @@ function renderTimelineFilters() {
     });
   }
 }
-/* --- ▲▲▲ 追加ここまで ▲▲▲ --- */
 /* ==============================================
    3. UI初期化・更新・タブ切り替え
    ============================================== */
+/* --- script.js 修正後：initUIブロック --- */
+/* --- script.js：initUIブロックを以下に書き換え --- */
+/* script.js の 240行目付近にある initUI 関数を以下に差し替え */
 function initUI() {
   updateRoomSelect();
   renderGroupButtons();
-　loadFilterState();
-   renderTimelineFilters();
+  loadFilterState();
+  const viewButtons = document.querySelectorAll('.btn-view');
+  viewButtons.forEach(btn => {
+      const modeMap = { '日': 'day', '週': 'week', '月': 'month' };
+      const btnMode = modeMap[btn.innerText];
+      btn.classList.toggle('active', btnMode === currentViewMode);
+  });
+  renderTimelineFilters();
   
-  currentFloor = 7;
-  renderDualMaps(); 
-  switchFloor(7); 
+  // 1. 今日の日付をセット
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = ('0' + (d.getMonth() + 1)).slice(-2);
+  const day = ('0' + d.getDate()).slice(-2);
+  const todayStr = `${y}-${m}-${day}`;
+
+  const dateInput = document.getElementById('map-date');
+  if(dateInput) {
+      dateInput.value = todayStr;
+      // ★修正: updateWeeklyBar ではなく updateMonthlyCalendar を呼ぶ
+      updateMonthlyCalendar(); 
+  }
   
+  currentFloor = 'hq'; 
+  // ★重要: マップを描画してからタイムラインを表示
+  renderHQMap();
+  
+  const timelineSection = document.getElementById('map-timeline-section');
+  if(timelineSection) {
+      timelineSection.style.display = 'block';
+      timelineSection.classList.remove('map-timeline-hidden');
+  }
+  
+  renderVerticalTimeline('map'); 
   document.getElementById('view-map-view').classList.add('active');
 
   initCustomTimePickers();
@@ -365,10 +455,12 @@ function initUI() {
   updateDayDisplay('map-date');
   startPolling();
   ensurePushSubscription();
+  loadHolidays();
+  checkReturnReports();
 }
 
 /* --- 自動更新 (ポーリング) --- */
-const POLLING_INTERVAL_ACTIVE = 10000;   
+const POLLING_INTERVAL_ACTIVE = 20000;   
 const POLLING_INTERVAL_IDLE   = 600000;  
 const IDLE_TIMEOUT            = 60000;   
 
@@ -418,17 +510,24 @@ function startPolling() {
     restartPolling(POLLING_INTERVAL_ACTIVE);
 }
 
+/* --- script.js 修正後：refreshUIブロック --- */
 function refreshUI() {
   renderLogs();
   renderGroupButtons();
   updateRoomSelect();
-　renderTimelineFilters();
+  renderTimelineFilters();
+
+  if (document.getElementById('view-receive-logs').classList.contains('active')) {
+      renderReceiveLogs();
+  }
 
   if (document.getElementById('view-map-view').classList.contains('active')) {
+      renderHQMap(); 
       if(document.getElementById('map-timeline-section').style.display !== 'none') {
           renderVerticalTimeline('map');
       }
   }
+  checkReturnReports();
 }
 
 function updateRoomSelect() {
@@ -436,7 +535,10 @@ function updateRoomSelect() {
   if (roomSelect) {
     const currentVal = roomSelect.value;
     roomSelect.innerHTML = "";
-    masterData.rooms.forEach(r => {
+    
+    // ▼▼▼ 修正：プルダウンの選択肢も部屋名（数字）で並び替える ▼▼▼
+    const sortedRooms = [...masterData.rooms].sort((a, b) => a.roomName.localeCompare(b.roomName, 'ja', { numeric: true }));
+    sortedRooms.forEach(r => {
       const op = document.createElement('option');
       op.value = r.roomId;
       op.innerText = r.roomName;
@@ -452,31 +554,46 @@ function switchTab(tabName) {
   const targetView = document.getElementById('view-' + tabName);
   if(targetView) targetView.classList.add('active');
   
-  // ▼▼▼ 追加: 戻るボタンの表示制御 ▼▼▼
   const backBtn = document.getElementById('btn-header-back');
   if (backBtn) {
-      // logs画面(履歴)のときだけ表示、それ以外は非表示
-      backBtn.style.display = (tabName === 'logs') ? 'inline-block' : 'none';
+      // 履歴または受信履歴の時に戻るボタンを表示
+      backBtn.style.display = (tabName === 'logs' || tabName === 'receive-logs') ? 'inline-block' : 'none';
   }
-  // ▲▲▲ 追加ここまで ▲▲▲
 
   if (tabName === 'map-view') {
-      setTimeout(() => { switchFloor(currentFloor); }, 50);
+    setTimeout(() => { renderHQMap(); }, 50); 
   } else if (tabName === 'logs') {
       renderLogs();
+  } else if (tabName === 'receive-logs') { 
+      renderReceiveLogs();
   }
 }
 
-function renderDualMaps() {
-    [7, 6].forEach(floor => {
-        const config = mapConfig[floor];
+/* --- script.js 修正後：renderHQMapブロック --- */
+/* ==============================================
+   修正: マップ描画 (7階と6階の両方を描画)
+   ============================================== */
+function renderHQMap() {
+    // 7階と6階の両方を処理する
+    const floors = ['7', '6'];
+    const now = new Date();
+
+    floors.forEach(floor => {
+        // mapConfigのキーが "hq" になっている場合の対策も含む
+        const config = (floor === '7' && mapConfig['hq']) ? mapConfig['hq'] : mapConfig[floor];
         if (!config) return;
 
         const imgEl = document.getElementById(`map-img-${floor}`);
-        if (imgEl) imgEl.src = config.image;
-
         const container = document.getElementById(`overlay-container-${floor}`);
-        if (!container) return;
+        if (!imgEl || !container) return;
+
+        if (!imgEl.src || imgEl.src !== config.image) {
+            imgEl.src = config.image;
+            imgEl.onload = () => {
+                 if(typeof initMapResizer === 'function') initMapResizer();
+            };
+        }
+
         container.innerHTML = '';
 
         config.areas.forEach(area => {
@@ -485,14 +602,51 @@ function renderDualMaps() {
             
             if (area.name.indexOf("会議室") !== -1) div.classList.add("type-meeting");
             else if (area.name.indexOf("応接室") !== -1) div.classList.add("type-reception");
-            else if (area.name.indexOf("Z") !== -1 || area.name.indexOf("Ｚ") !== -1) div.classList.add("type-z");
 
+            div.style.position = "absolute";
             div.style.top = area.top + "%";
             div.style.left = area.left + "%";
             div.style.width = area.width + "%";
             div.style.height = area.height + "%";
-            div.innerText = area.name;
-            if(area.color) div.style.backgroundColor = area.color;
+            
+            div.style.display = "flex";
+            div.style.justifyContent = "center";
+            div.style.alignItems = "center";
+            div.style.textAlign = "center";
+            div.style.fontSize = "clamp(9px, 2.5vw, 14px)"; 
+            div.style.lineHeight = "1.1";
+            div.style.fontWeight = "bold";
+            div.style.boxSizing = "border-box";
+            div.style.padding = "2px";
+            div.style.whiteSpace = "pre-wrap"; 
+            div.style.overflow = "hidden"; 
+            div.innerText = area.name.replace(" ", "\n").replace("(", "\n(");
+
+            let isBusy = false;
+            if (masterData && masterData.reservations) {
+                isBusy = masterData.reservations.some(res => {
+                    const rId = String(getVal(res, ['resourceId', 'roomId', 'room_id', 'resource_id', '部屋ID'])).trim();
+                    if (rId !== String(area.id).trim() && rId !== String(area.name).trim()) return false;
+                    
+                    const startStr = res._startTime || res.startTime || res.start_time;
+                    const endStr = res._endTime || res.endTime || res.end_time;
+                    if (!startStr || !endStr) return false;
+
+                    const rStart = new Date(String(startStr).replace(/-/g, '/'));
+                    const rEnd = new Date(String(endStr).replace(/-/g, '/'));
+                    return (now >= rStart && now < rEnd);
+                });
+            }
+
+            if (isBusy) {
+                div.style.backgroundColor = area.color || "rgba(255, 0, 0, 0.4)";
+                const darkerColor = area.color ? area.color.replace('0.4', '0.8') : "red";
+                div.style.border = `2px solid ${darkerColor}`;
+            } else {
+                div.style.backgroundColor = "rgba(255, 255, 255, 0.4)";
+                div.style.border = "1px dashed #666";
+                div.style.color = "#333";
+            }
             
             div.setAttribute('data-room-id', area.id);
             div.onclick = function() { selectRoomFromMap(this); };
@@ -501,82 +655,49 @@ function renderDualMaps() {
     });
 }
 
-function switchFloor(floor) {
-    currentFloor = floor;
-    currentMapRoomId = null;
-
-    const mapContainer = document.getElementById('view-map-view');
-    if(mapContainer) {
-        mapContainer.querySelectorAll('.floor-tab').forEach(tab => tab.classList.remove('active'));
-    }
-    const activeTab = document.getElementById(`tab-${floor}f`);
-    if(activeTab) activeTab.classList.add('active');
-
-    const area7 = document.getElementById('area-7f');
-    const area6 = document.getElementById('area-6f');
-    if(area7) area7.classList.remove('active');
-    if(area6) area6.classList.remove('active');
-    
-    const activeArea = document.getElementById(`area-${floor}f`);
-    if(activeArea) {
-        activeArea.classList.add('active');
-        // ★修正: サイズ固定リセット
-        const wrapper = activeArea.querySelector('.map-inner-wrapper');
-        if (wrapper) {
-            wrapper.style.width = '';
-            wrapper.style.height = '';
-        }
-    }
-
-    const titleEl = document.getElementById('map-selected-room-name');
-    if(titleEl) titleEl.innerText = `${floor}階 予約状況`;
-    
-    const timelineSec = document.getElementById('map-timeline-section');
-    if(timelineSec) timelineSec.style.display = 'block';
-
-    renderVerticalTimeline('map');
-}
-
-/* ==============================================
-   マップの部屋クリック時の処理 (修正版)
-   ============================================== */
-/* script.js の selectRoomFromMap 関数内 */
+/* script.js 内の selectRoomFromMap 関数を以下のように差し替え */
 
 function selectRoomFromMap(element) {
   const roomId = element.getAttribute('data-room-id');
-  const roomObj = masterData.rooms.find(r => String(r.roomId) === String(roomId));
+  
+  // masterData.rooms の中身をログ出力して、APIから何が届いているか確認してください
+  console.log("現在保持している部屋リスト:", masterData.rooms);
+
+  const roomObj = masterData.rooms.find(r => String(r.roomId).trim() === String(roomId).trim());
   
   if (!roomObj) {
-    alert("エラー: 指定された部屋ID (" + roomId + ") が見つかりません。");
-    return;
+      // 一致しない場合、どのIDを探して何が存在したかを表示します
+      console.warn(`データベースに存在しない部屋IDがクリックされました: ${roomId}`);
+      console.log("DB上の有効なID一覧:", masterData.rooms.map(r => r.roomId));
+      return;
   }
+  // モードを「日」に切り替え
+  currentViewMode = 'day';
+  const viewButtons = document.querySelectorAll('.btn-view');
+  viewButtons.forEach(btn => btn.classList.toggle('active', btn.innerText === '日'));
 
-  // ▼▼▼ 修正: 既存の選択を維持して追加する処理 ▼▼▼
+  // フィルタ設定（クリックした部屋だけを表示）
+  activeFilterIds.clear();
+  activeFilterIds.add(roomId); 
   
-  // もし「全部屋」モードだった場合は、一旦解除して個別選択モードに切り替える
-  if (activeFilterIds.has('ALL')) {
-      activeFilterIds.delete('ALL');
-  }
-
-  // クリックした部屋をフィルタに追加する (Setなので重複は自動で無視されます)
-  activeFilterIds.add(roomId);
-
-  saveFilterState();            // 状態を保存
-  renderTimelineFilters();      // ボタンの見た目を更新
-  
-  // ▲▲▲ 修正ここまで ▲▲▲
-
+  saveFilterState();            
+  renderTimelineFilters();      
   currentMapRoomId = roomId;
-  document.getElementById('map-timeline-section').style.display = 'block';
-  
-  const titleEl = document.getElementById('map-selected-room-name');
-  if (titleEl) {
-      titleEl.innerText = roomObj.roomName;
+
+  // タイムラインの表示更新
+  const timelineSection = document.getElementById('map-timeline-section');
+  if (timelineSection) {
+      timelineSection.style.display = 'block';
+      const parentView = document.getElementById('view-map-view');
+      if (parentView) {
+          parentView.scrollTo({
+              top: timelineSection.offsetTop - 10,
+              behavior: 'smooth'
+          });
+      }
   }
 
-  // タイムラインを描画してスクロール
   renderVerticalTimeline('map', true);
-  document.getElementById('map-timeline-section').scrollIntoView({behavior: 'smooth'});
 }
 /* ==============================================
    5. タイムライン関連処理
@@ -621,19 +742,23 @@ function drawTimeAxis(containerId) {
       container.appendChild(div);
   }
 }
-
 /* ==============================================
-   レンダリング: 垂直タイムライン
-   【修正版: 時間軸のズレ（不要ヘッダー）を削除して位置合わせ】
+   レンダリング: 垂直タイムライン (日・週表示対応)
    ============================================== */
 function renderVerticalTimeline(mode, shouldScroll = false) {
+    if (typeof currentViewMode !== 'undefined') {
+        if (currentViewMode === 'week') return renderMatrixWeekTimeline(mode, shouldScroll);
+        // ★ここを1行追加！月表示の時は専用の関数を呼ぶ
+        if (currentViewMode === 'month') return renderMatrixMonthTimeline(mode, shouldScroll);
+    }
+
     let container, dateInputId, targetRooms, timeAxisId;
 
     if (mode === 'all') {
         container = document.getElementById('rooms-container-all');
         dateInputId = 'timeline-date';
         timeAxisId = 'time-axis-all';
-        const floorConfig = mapConfig[currentTimelineFloor];
+        const floorConfig = mapConfig['hq'];
         if (floorConfig) {
             const floorRoomIds = floorConfig.areas.map(area => String(area.id)); 
             targetRooms = masterData.rooms.filter(r => floorRoomIds.includes(String(r.roomId)));
@@ -643,19 +768,28 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
         dateInputId = 'map-date';
         timeAxisId = 'time-axis-map';
         targetRooms = [];
-        const floorOrder = [7, 6]; 
-        floorOrder.forEach(floor => {
-            const config = mapConfig[floor];
+        
+        // ▼▼▼ 修正：7階と6階の両方から部屋情報を取得する ▼▼▼
+        const floors = ['7', '6'];
+        floors.forEach(floor => {
+            const config = (floor === '7' && mapConfig['hq']) ? mapConfig['hq'] : mapConfig[floor];
             if (config && config.areas) {
                 config.areas.forEach(area => {
-                    const room = masterData.rooms.find(r => String(r.roomId) === String(area.id));
-                    if (room) targetRooms.push(room);
+                    const room = masterData.rooms.find(r => 
+                        String(r.roomId).trim() === String(area.id).trim()
+                    );
+                    if (room && !targetRooms.includes(room)) {
+                        targetRooms.push(room);
+                    }
                 });
             }
         });
-       if (!activeFilterIds.has('ALL')) {
+        // ▲▲▲ 修正ここまで ▲▲▲
+        if (!activeFilterIds.has('ALL')) {
             targetRooms = targetRooms.filter(r => activeFilterIds.has(String(r.roomId)));
         }
+        // ▼▼▼ 追加：タイムラインの列を部屋名（数字）で並び替える ▼▼▼
+        targetRooms.sort((a, b) => a.roomName.localeCompare(b.roomName, 'ja', { numeric: true }));
     } else { return; }
 
     const headerContainer = document.getElementById('map-room-headers');
@@ -674,123 +808,94 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
         return;
     }
 
-    const scrollableParent = container ? container.closest('.calendar-scroll-area') : null;
-    let savedScrollTop = 0, savedScrollLeft = 0;
     const mapWrapper = document.querySelector('.map-wrapper');
-    if (mode === 'map' && mapWrapper) {
-        savedScrollTop = mapWrapper.scrollTop;
-    } else if (scrollableParent) {
-        savedScrollTop = scrollableParent.scrollTop;
-        savedScrollLeft = scrollableParent.scrollLeft;
+    const scrollableParent = container ? container.closest('.calendar-scroll-area') : null;
+    const verticalScrollTarget = document.getElementById('view-map-view'); // ★追加
+    let savedScrollTop = 0, savedScrollLeft = 0;
+
+    if (!shouldScroll) {
+        // ★修正: mapWrapper ではなく verticalScrollTarget から取得
+        if (mode === 'map' && verticalScrollTarget) { savedScrollTop = verticalScrollTarget.scrollTop; } 
+        else if (scrollableParent) { savedScrollTop = scrollableParent.scrollTop; }
+        if (scrollableParent) { savedScrollLeft = scrollableParent.scrollLeft; }
     }
 
     if (container) {
         container.innerHTML = "";
-        if (mode === 'map') {
-            container.style.height = "auto";
-            container.style.overflowY = "visible"; 
-        } else {
-            container.style.height = "100%";
-            container.style.overflowY = "auto";
-        }
-        container.style.width = "100%";
-        container.style.overflowX = "visible"; 
-        container.style.display = "flex";
-        container.style.flexWrap = "nowrap";
-        container.style.alignItems = "flex-start";
-        container.style.position = "relative";
-        container.style.cursor = "default";
-        container.style.userSelect = "none";
+        if (mode === 'map') { container.style.height = "auto"; container.style.overflowY = "visible"; } 
+        else { container.style.height = "100%"; container.style.overflowY = "auto"; }
+        container.style.width = "100%"; container.style.overflowX = "visible"; 
+        container.style.display = "flex"; container.style.flexWrap = "nowrap";
+        container.style.flexDirection = "row";
+        container.style.alignItems = "flex-start"; container.style.position = "relative";
+        container.style.cursor = "default"; container.style.userSelect = "none";
     }
-    
-    // ドラッグスクロール関連
-    let isDown = false;
-    let startX, startY, startScrollLeftVal, startScrollTopVal, hasDragged = false, isTouch = false, rafId = null; 
 
+    let isDown = false, startX, startY, startScrollLeftVal, startScrollTopVal, hasDragged = false, isTouch = false, rafId = null; 
     if (scrollableParent) {
         scrollableParent.addEventListener('touchstart', () => { isTouch = true; }, { passive: true });
-        const mapWrapper = document.querySelector('.map-wrapper');
-        const vScrollTarget = (mode === 'map') ? mapWrapper : scrollableParent;
-
+        // ★修正: vScrollTarget を mapWrapper から verticalScrollTarget に変更
+        const vScrollTarget = (mode === 'map') ? verticalScrollTarget : scrollableParent;
         scrollableParent.style.cursor = "default";
-
-        scrollableParent.onwheel = (e) => {
-            if (e.ctrlKey) return; 
-            if (e.deltaX !== 0 || e.shiftKey) {
-                e.preventDefault();
-                scrollableParent.scrollLeft += (e.deltaX || e.deltaY);
-            }
-        };
-
+        scrollableParent.onwheel = (e) => { if (e.ctrlKey) return; if (e.deltaX !== 0 || e.shiftKey) { e.preventDefault(); scrollableParent.scrollLeft += (e.deltaX || e.deltaY); } };
         scrollableParent.onmousedown = (e) => {
-            if (isTouch) return;
-            if (e.target.closest('.v-booking-bar') || ['INPUT', 'SELECT', 'BUTTON', 'TEXTAREA'].includes(e.target.tagName)) return;
-            isDown = true;
-            hasDragged = false;
-            scrollableParent.style.cursor = "grabbing";
-            startX = e.pageX;
-            startY = e.pageY;
-            startScrollLeftVal = scrollableParent.scrollLeft;
-            startScrollTopVal = vScrollTarget ? vScrollTarget.scrollTop : 0;
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
+            if (isTouch || e.target.closest('.v-booking-bar') || ['INPUT', 'SELECT', 'BUTTON', 'TEXTAREA'].includes(e.target.tagName)) return;
+            isDown = true; hasDragged = false; scrollableParent.style.cursor = "grabbing";
+            startX = e.pageX; startY = e.pageY; startScrollLeftVal = scrollableParent.scrollLeft; startScrollTopVal = vScrollTarget ? vScrollTarget.scrollTop : 0;
+            document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
         };
-
         const onMouseMove = (e) => {
-            if (!isDown || isTouch) return;
-            e.preventDefault();
-            if (rafId) return;
-            const currentX = e.pageX;
-            const currentY = e.pageY;
+            if (!isDown || isTouch) return; e.preventDefault(); if (rafId) return;
             rafId = requestAnimationFrame(() => {
-                const walkX = (currentX - startX) * 1.5;
-                const walkY = (currentY - startY) * 1.5;
+                const walkX = (e.pageX - startX) * 1.5; const walkY = (e.pageY - startY) * 1.5;
                 if (Math.abs(walkX) > 5 || Math.abs(walkY) > 5) hasDragged = true;
                 scrollableParent.scrollLeft = startScrollLeftVal - walkX;
                 if (vScrollTarget) vScrollTarget.scrollTop = startScrollTopVal - walkY;
                 rafId = null;
             });
         };
-
         const onMouseUp = () => {
-            isDown = false;
-            if (scrollableParent) scrollableParent.style.cursor = "default";
+            isDown = false; if (scrollableParent) scrollableParent.style.cursor = "default";
             if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
+            document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp);
             setTimeout(() => { hasDragged = false; }, 50);
         };
     }
 
     const rawDateVal = document.getElementById(dateInputId).value;
-    const targetDateNum = formatDateToNum(new Date(rawDateVal));
+    const baseDate = new Date(rawDateVal);
+    let columns = [];
+
+    targetRooms.forEach(room => {
+        columns.push({
+            id: String(room.roomId),
+            title: room.roomName,
+            dateObj: baseDate,
+            dateNum: formatDateToNum(baseDate),
+            roomObj: room,
+            isHighlight: (mode === 'map' && String(room.roomId) === String(currentMapRoomId)),
+            dateStr: rawDateVal
+        });
+    });
+
     hourRowHeights = {}; 
     for (let h = START_HOUR; h < END_HOUR; h++) hourRowHeights[h] = BASE_HOUR_HEIGHT;
-
     const DYNAMIC_CHARS_PER_LINE = 12;
-    // ...
+
     const allRelevantReservations = masterData.reservations.filter(res => {
         const startTimeVal = getVal(res, ['startTime', 'start_time', '開始日時', '開始']);
         if (!startTimeVal) return false;
-        
-        // ★修正: Safari用にハイフン(-)をスラッシュ(/)に変換してからDateにする
-        // これをやらないとSafariで Invalid Date になり真っ白になります
         const safeStart = String(startTimeVal).replace(/-/g, '/');
-        
-        const rId = getVal(res, ['resourceId', 'roomId', 'room_id', 'resource_id', '部屋ID']);
-        const isTargetRoom = targetRooms.some(r => String(r.roomId) === String(rId));
-        
-        // ★修正: 変換した safeStart を使う
+        const rId = String(getVal(res, ['resourceId', 'roomId', 'room_id', 'resource_id', '部屋ID']));
         const resDateNum = formatDateToNum(new Date(safeStart));
         
-        // ★修正: 内部プロパティにも変換後の値を入れる
         res._startTime = safeStart;
-        
         const endTimeVal = getVal(res, ['endTime', 'end_time', '終了日時', '終了']);
         res._endTime = String(endTimeVal).replace(/-/g, '/');
-        
         res._resourceId = rId;
-        return isTargetRoom && (resDateNum === targetDateNum);
+
+        const isTargetRoom = targetRooms.some(r => String(r.roomId) === rId);
+        return isTargetRoom && (resDateNum === columns[0].dateNum);
     });
 
     allRelevantReservations.forEach(res => {
@@ -818,8 +923,7 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
 
     let nowTopPx = -1;
     const now = new Date();
-    const todayStr = formatDateToNum(now);
-    if (targetDateNum === todayStr) {
+    if (columns.some(c => c.dateNum === formatDateToNum(now))) {
         const nowH = now.getHours();
         const nowM = now.getMinutes();
         if (nowH >= START_HOUR && nowH < END_HOUR) {
@@ -827,17 +931,15 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
         }
     }
 
-    // ★修正: 時間軸の描画と不要ヘッダーの削除
     drawTimeAxis(timeAxisId);
     const axisContainer = document.getElementById(timeAxisId);
     if (axisContainer && container) {
         if (mode === 'map') {
-            // ★マップモードの場合、drawTimeAxisが作った「ヘッダー(40px)」が邪魔なので削除する
             const extraHeader = axisContainer.querySelector('.time-axis-header');
             if (extraHeader) extraHeader.remove();
-            
             axisContainer.style.height = currentTop + "px";
             axisContainer.style.overflow = "visible";
+            axisContainer.classList.remove('matrix-axis-width');
         } else if (mode === 'all') {
             axisContainer.style.height = container.style.height;
             axisContainer.style.overflow = "hidden";
@@ -846,77 +948,55 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
         axisContainer.style.display = "block";
     }
 
-    targetRooms.forEach(room => {
-        const col = document.createElement('div');
-        col.className = 'room-col';
-        col.style.width = "120px"; 
-        col.style.minWidth = "120px"; 
-        col.style.flex = "0 0 120px"; 
-        col.style.position = "relative";
-        col.style.borderRight = "1px solid #ddd";
-        col.style.overflow = "visible";
-
-        if (mode === 'map' && String(room.roomId) === String(currentMapRoomId)) {
-            col.classList.add('target-highlight');
-            if (shouldScroll && scrollableParent) {
-                setTimeout(() => {
-                    const colLeft = col.offsetLeft;
-                    const parentWidth = scrollableParent.clientWidth;
-                    scrollableParent.scrollLeft = colLeft - (parentWidth / 2) + 60; 
-                }, 100);
-            }
-        }
+    columns.forEach(col => {
+        const divCol = document.createElement('div');
+        divCol.className = 'room-col';
+        if (mode === 'map' && col.isHighlight) divCol.classList.add('target-highlight');
         
         if (mode === 'map' && headerContainer) {
             const stickyHeader = document.createElement('div');
             stickyHeader.className = 'sticky-header-item'; 
-            stickyHeader.innerText = room.roomName;
-            stickyHeader.style.width = "120px";
-            stickyHeader.style.minWidth = "120px";
-            stickyHeader.style.flex = "0 0 120px";
+            stickyHeader.innerText = col.title;
 
-            stickyHeader.onclick = (e) => {
-                 currentMapRoomId = room.roomId;
-                 document.querySelectorAll('.sticky-header-item').forEach(el => el.style.backgroundColor = '#fafafa');
-                 document.querySelectorAll('.room-col').forEach(el => el.classList.remove('target-highlight'));
-                 stickyHeader.style.backgroundColor = '#fff9c4'; 
-                 col.classList.add('target-highlight');
-                 const titleEl = document.getElementById('map-selected-room-name');
-                 if (titleEl) titleEl.innerText = room.roomName;
-            };
-            
-            if (String(room.roomId) === String(currentMapRoomId)) {
+            if (col.isHighlight) {
                 stickyHeader.style.backgroundColor = '#fff9c4';
-                col.classList.add('target-highlight');
+                divCol.classList.add('target-highlight');
             }
+            // ▼▼▼ 修正：他の部屋を消さずに、ハイライト対象だけを変更する ▼▼▼
+            stickyHeader.style.cursor = "pointer";
+            stickyHeader.onclick = () => {
+                currentMapRoomId = col.id; // ハイライトする部屋のIDだけを更新
+                renderVerticalTimeline('map', false);
+            };
+
             headerContainer.appendChild(stickyHeader);
         } else {
             const header = document.createElement('div');
             header.className = 'room-header';
-            header.innerText = room.roomName;
-            col.appendChild(header);
+            header.innerText = col.title;
+            divCol.appendChild(header);
         }
 
         const body = document.createElement('div');
         body.className = 'room-grid-body';
+        body.style.height = currentTop + "px";
+        body.style.position = "relative";
+        body.style.cursor = "pointer"; 
+        body.dataset.roomId = col.id;
+        body.dataset.dateStr = col.dateStr;
+        body.addEventListener('dragover', handleDragOver);
+        body.addEventListener('drop', handleDropOnTimeline);
         
-        if (nowTopPx !== -1) {
+        if (nowTopPx !== -1 && col.dateNum === formatDateToNum(now)) {
             const line = document.createElement('div');
             line.className = 'current-time-line';
             line.style.top = nowTopPx + "px";
             line.style.position = 'absolute';
-            line.style.left = '0';
-            line.style.width = '100%';
-            line.style.height = '2px';
-            line.style.borderTop = '2px solid red';
-            line.style.zIndex = '50';
+            line.style.left = '0'; line.style.width = '100%'; line.style.height = '2px';
+            line.style.borderTop = '2px solid red'; line.style.zIndex = '50';
             line.style.pointerEvents = 'none';
             body.appendChild(line);
         }
-
-        body.style.height = currentTop + "px";
-        body.style.position = "relative";
-        body.style.cursor = "pointer"; 
 
         for (let h = START_HOUR; h < END_HOUR; h++) {
             const slot = document.createElement('div');
@@ -945,10 +1025,14 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
                     break;
                 }
             }
-            if (clickedHour !== -1) openModal(null, room.roomId, clickedHour, clickedMin);
+            if (clickedHour !== -1) {
+                const rId = col.roomObj ? col.roomObj.roomId : null;
+                openModal(null, rId, clickedHour, clickedMin, col.dateStr);
+            }
         };
 
-        const reservations = allRelevantReservations.filter(res => String(res._resourceId) === String(room.roomId));
+        const reservations = allRelevantReservations.filter(res => String(res._resourceId) === col.id);
+
         reservations.forEach(res => {
             const start = new Date(res._startTime);
             const end = new Date(res._endTime);
@@ -971,13 +1055,20 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
                 if (heightPx < minHeightPx) heightPx = minHeightPx;
 
                 const bar = document.createElement('div');
-                let cssType = room.type;
-                if (!cssType || (cssType !== 'meeting' && cssType !== 'reception' && cssType !== 'zoom')) {
-                    if (room.roomName.indexOf("会議室") !== -1) cssType = "meeting";
-                    else if (room.roomName.indexOf("応接室") !== -1) cssType = "reception";
-                    else if (room.roomName.indexOf("Z") !== -1 || room.roomName.indexOf("Ｚ") !== -1) cssType = "zoom";
+                let cssType = col.roomObj ? col.roomObj.type : 'meeting';
+                if (!cssType && col.roomObj) {
+                    if (col.roomObj.roomName.indexOf("応接室") !== -1) cssType = "reception";
+                    else if (col.roomObj.roomName.indexOf("Z") !== -1 || col.roomObj.roomName.indexOf("Ｚ") !== -1) cssType = "zoom";
+                    else cssType = "meeting";
                 }
+                // 安全装置: 該当しない場合は強制的に meeting (青) にする
+                if (!['meeting', 'reception', 'zoom'].includes(cssType)) cssType = 'meeting';
                 bar.className = `v-booking-bar type-${cssType}`;
+                if (res.isTentative) bar.classList.add('tentative-booking'); // ★追加
+                bar.draggable = true;
+                bar.dataset.resId = res.id;
+                bar.addEventListener('dragstart', handleDragStart);
+                bar.addEventListener('dragend', handleDragEnd);
                 bar.style.top = (topPx + 1) + "px";
                 bar.style.height = (heightPx - 2) + "px";
                 bar.style.zIndex = "5";
@@ -1011,6 +1102,8 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
                      }
                 }
 
+                applyCustomTagColor(bar, displayTitle);
+
                 bar.innerHTML = `
                       <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${timeRangeStr}</div>
                       <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayTitle}</div>
@@ -1026,16 +1119,31 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
             }
         });
 
-        col.appendChild(body);
-        container.appendChild(col);
+        divCol.appendChild(body);
+        container.appendChild(divCol);
     });
 
     if (scrollableParent) {
         if (!shouldScroll) {
             scrollableParent.scrollLeft = savedScrollLeft; 
-            if (mode !== 'map') scrollableParent.scrollTop = savedScrollTop; 
+            // ★修正: mapWrapper ではなく verticalScrollTarget を復元
+            if (mode === 'map' && verticalScrollTarget) { verticalScrollTarget.scrollTop = savedScrollTop; } 
+            else if (mode !== 'map') { scrollableParent.scrollTop = savedScrollTop; }
         }
         
+        if (shouldScroll) {
+            setTimeout(() => {
+                const targetCol = container.querySelector('.target-highlight');
+                if (targetCol) {
+                    const colLeft = targetCol.offsetLeft;
+                    const parentWidth = scrollableParent.clientWidth;
+                    const colWidth = targetCol.offsetWidth;
+                    const scrollTarget = colLeft - (parentWidth / 2) + (colWidth / 2);
+                    scrollableParent.scrollTo({ left: scrollTarget, behavior: 'smooth' });
+                }
+            }, 300);
+        }
+
         if (mode === 'map' && headerContainer) {
             const scrollBarWidth = scrollableParent.offsetWidth - scrollableParent.clientWidth;
             if (scrollBarWidth > 0) {
@@ -1069,7 +1177,7 @@ function calculateEndTime(startId, endId) {
   let m = parseInt(parts[1], 10);
 
   // 1時間進める
-  h += 1;
+  h += 2;
 
   // 21時を超える場合は21:00に制限
   if (h >= 21) {
@@ -1131,7 +1239,8 @@ function formatTimeInput(elm) {
 }
 
 /* ----- 修正後の openModal 関数 ----- */
-function openModal(res = null, defaultRoomId = null, clickHour = null, clickMin = 0) {
+function openModal(res = null, defaultRoomId = null, clickHour = null, clickMin = 0, clickDateStr = null) {
+  initCustomTimePickers();
   const modal = document.getElementById('bookingModal');
   modal.style.display = 'flex';
   document.getElementById('btn-back-avail').style.display = 'none';   
@@ -1140,6 +1249,10 @@ function openModal(res = null, defaultRoomId = null, clickHour = null, clickMin 
   selectedParticipantIds.clear();
   originalParticipantIds.clear(); 
   document.getElementById('shuttle-search-input').value = "";
+
+  if(document.getElementById('check-tentative')) {
+      document.getElementById('check-tentative').checked = res ? !!res.isTentative : false;
+  }
 
   // 編集用・新規用のエリア表示リセット
   const editSeriesOption = document.getElementById('edit-series-option');
@@ -1260,7 +1373,8 @@ function openModal(res = null, defaultRoomId = null, clickHour = null, clickMin 
     }
 
     const dateInput = document.getElementById('map-date');
-    let currentTabDate = dateInput ? dateInput.value : '';
+    // クリックされた日付が渡されていればそれを優先する
+    let currentTabDate = clickDateStr ? clickDateStr : (dateInput ? dateInput.value : '');
     if(!currentTabDate) {
         const now = new Date();
         currentTabDate = `${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-${('0' + now.getDate()).slice(-2)}`;
@@ -1272,19 +1386,31 @@ function openModal(res = null, defaultRoomId = null, clickHour = null, clickMin 
     document.getElementById('input-start').value = `${pad(sHour)}:${pad(sMin)}`;
     autoSetEndTime();
 
-    document.getElementById('input-title').value = "";
+ document.getElementById('input-title').value = ""; 
+    if (typeof pendingTitle !== 'undefined' && pendingTitle !== "") {
+        document.getElementById('input-title').value = pendingTitle;
+        // ※ここでは pendingTitle = ""; をしない（保存/キャンセル時に closeModal で消す）
+    }
+
     document.getElementById('input-note').value = "";
     document.getElementById('btn-delete').style.display = 'none';
-    if (typeof currentUser !== 'undefined' && currentUser && currentUser.userId) {
-        selectedParticipantIds.add(String(currentUser.userId));
-    }
   }
   renderShuttleLists(); 
+  syncTitleTags();
+  isTagDeleteMode = false;
+  renderTitleTags();
   if (modal) modal.scrollTop = 0;
   const modalContent = modal.querySelector('.modal-content');
   if (modalContent) modalContent.scrollTop = 0;
 }
-function closeModal() { document.getElementById('bookingModal').style.display = 'none'; }
+
+function closeModal() { 
+    document.getElementById('bookingModal').style.display = 'none'; 
+    
+    // activeReportId をリセットするだけ（画面更新はしない）
+    activeReportId = null; 
+    pendingTitle = ""; // ★予約が終わった、またはキャンセルした時に初めてリセットする
+}
 
 function getParticipantIdsFromRes(res) {
     const pIds = getVal(res, ['participantIds', 'participant_ids', '参加者', 'メンバー']);
@@ -1466,7 +1592,8 @@ async function saveBooking() {
     }
 
     // --- ▼▼▼ 重複チェック (部屋と人を分離) ▼▼▼ ---
-    let roomConflictMessages = [];   // 部屋の重複用
+    let roomConflictMessages = [];   // ★本予約の重複用
+    let tentativeRoomConflictMessages = []; // ★仮予約の重複用
     let memberConflictMessages = []; // 人の重複用
     const checkTargets = Array.from(selectedParticipantIds);
 
@@ -1497,9 +1624,13 @@ async function saveBooking() {
                 const roomObj = masterData.rooms.find(r => String(r.roomId) === String(exResourceId));
                 const roomName = roomObj ? roomObj.roomName : "不明な部屋";
                 
-                // メッセージ追加（重複しないように）
                 const msg = `・${dateStr} ${timeStr} ${roomName}`;
-                if (!roomConflictMessages.includes(msg)) roomConflictMessages.push(msg);
+                // ▼▼▼ 修正：相手が「仮予約」かどうかでエラーを分類する ▼▼▼
+                if (existingRes.isTentative) {
+                    if (!tentativeRoomConflictMessages.includes(msg)) tentativeRoomConflictMessages.push(msg);
+                } else {
+                    if (!roomConflictMessages.includes(msg)) roomConflictMessages.push(msg);
+                }
             }
 
             // 2. 【人の重複】チェック
@@ -1522,13 +1653,27 @@ async function saveBooking() {
 
     // ▼▼▼ 判定ロジック ▼▼▼
     
-    // 1. 部屋の重複がある場合 -> 【登録不可 (Alert & Return)】
+    const isTentativeChecked = document.getElementById('check-tentative') && document.getElementById('check-tentative').checked;
+
+    // 1. 本予約との重複がある場合（今まで通り厳しく弾く）
     if (roomConflictMessages.length > 0) {
-        alert(`【登録できません】\n以下の日程で「部屋」が重複しています。\n時間を変更してください。\n\n${roomConflictMessages.slice(0, 5).join('\n')}` + (roomConflictMessages.length > 5 ? '\n...他' : ''));
-        return; // 中断
+        if (isTentativeChecked) {
+            if (!confirm(`【警告】すでに確定した「本予約」が存在しますが、「仮予約」として重ねて登録しますか？\n\n${roomConflictMessages.slice(0, 5).join('\n')}`)) return;
+        } else {
+            alert(`【登録できません】\n以下の日程ですでに「本予約」が入っています。\n時間を変更してください。\n\n${roomConflictMessages.slice(0, 5).join('\n')}` + (roomConflictMessages.length > 5 ? '\n...他' : ''));
+            return; // 中断
+        }
+    }
+    // 2. 相手が「仮予約」のみの場合（聞いてあげる）
+    else if (tentativeRoomConflictMessages.length > 0) {
+        if (isTentativeChecked) {
+            if (!confirm(`【確認】この時間帯には他の「仮予約」が入っていますが、重ねて「仮予約」を登録しますか？\n\n${tentativeRoomConflictMessages.slice(0, 5).join('\n')}`)) return;
+        } else {
+            if (!confirm(`【確認】この時間帯には他の「仮予約」が入っていますが、優先して「本予約」として登録（確定）しますか？\n\n${tentativeRoomConflictMessages.slice(0, 5).join('\n')}`)) return;
+        }
     }
 
-    // 2. 人の重複がある場合 -> 【警告 (Confirm)】
+    // 3. 人の重複がある場合 -> 【警告 (Confirm)】
     if (memberConflictMessages.length > 0) {
         const msg = `以下の予定と「参加者」が重複していますが、このまま登録しますか？\n(重複: ${memberConflictMessages.length}件)\n\n` + 
                     memberConflictMessages.slice(0, 5).join('\n') + 
@@ -1573,7 +1718,8 @@ async function saveBooking() {
             operatorName: currentUser.userName,
             participantIds: pIds, 
             title: title,
-            note: note 
+            note: note,
+            isTentative: isTentativeChecked // ★追加：仮予約フラグを送信
         };
 
         try {
@@ -1598,6 +1744,20 @@ async function saveBooking() {
         wrapper.style.display = 'none'; 
 
         if (failCount === 0) {
+            // ▼▼▼ ここを修正：保存成功時のみ消去を実行 ▼▼▼
+            if (activeReportId) {
+                // ① データベースを既読（1）にする
+                callAPI({ action: 'markReturnRead', reportId: activeReportId }, false);
+                
+                // ② 自分の画面（メモリ上）からもその報告を削除する
+                masterData.returnReports = masterData.returnReports.filter(r => r.id !== activeReportId);
+                
+                // ③ 最新の状態をバナーに反映させる（これでバナーが消える）
+                checkReturnReports();
+                
+                // ④ 終わったのでIDをリセット
+                activeReportId = null;
+            }
             alert("保存しました (" + successCount + "件)");
             closeModal();
             loadAllData(true);
@@ -1610,7 +1770,7 @@ async function saveBooking() {
 }
 
 /* ==============================================
-   詳細モーダル表示 (時刻ズレ修正版)
+   詳細モーダル表示 (時刻ズレ・NaN修正版)
    ============================================== */
 function openDetailModal(res) {
   currentDetailRes = res;
@@ -1619,7 +1779,7 @@ function openDetailModal(res) {
   // 日付文字列を安全にパース
   const safeDate = (str) => new Date(String(str).replace(/-/g, '/'));
   
-  // ★追加: サーバー時刻(UTC)をパースする関数
+  // サーバー時刻(UTC)をパースする関数
   const parseUtcDate = (str) => {
       if (!str) return null;
       let s = String(str).trim();
@@ -1628,8 +1788,11 @@ function openDetailModal(res) {
       return new Date(s);
   };
 
-  const s = safeDate(res._startTime);
-  const e = safeDate(res._endTime);
+  // ★修正：週表示から渡された場合は _startTime がないので startTime を使う
+  const sStr = res._startTime || res.startTime || res.start_time;
+  const eStr = res._endTime || res.endTime || res.end_time;
+  const s = safeDate(sStr);
+  const e = safeDate(eStr);
 
   const week = ['日', '月', '火', '水', '木', '金', '土'];
   const dayIndex = s.getDay();
@@ -1640,19 +1803,21 @@ function openDetailModal(res) {
   
   document.getElementById('detail-time').innerText = `${dateStr} ${timeStr}`;
   
-  const room = masterData.rooms.find(r => String(r.roomId) === String(res._resourceId));
-  document.getElementById('detail-room').innerText = room ? room.roomName : res._resourceId;
+  // ★修正：部屋IDを確実に見つける
+  const targetRoomId = res._resourceId || res.resourceId || res.roomId || res.room_id;
+  const room = masterData.rooms.find(r => String(r.roomId) === String(targetRoomId));
+  document.getElementById('detail-room').innerText = room ? room.roomName : (targetRoomId || '-');
+  
   document.getElementById('detail-title').innerText = getVal(res, ['title', 'subject', '件名', 'タイトル']) || '(なし)';
 
   // 登録者・編集者情報
   const metaContainer = document.getElementById('detail-meta-info');
   if (metaContainer) {
-      const fmt = (dObj) => { // Dateオブジェクトを受け取るように変更
+      const fmt = (dObj) => { 
           if(!dObj || isNaN(dObj.getTime())) return "-";
           return `${dObj.getFullYear()}/${('0'+(dObj.getMonth()+1)).slice(-2)}/${('0'+dObj.getDate()).slice(-2)} ${('0'+dObj.getHours()).slice(-2)}:${('0'+dObj.getMinutes()).slice(-2)}`;
       };
       
-      // ★修正: UTC変換を適用
       const createdTime = fmt(parseUtcDate(res.createdAt));
       const createdName = res.createdBy || "-";
       const updatedTime = fmt(parseUtcDate(res.updatedAt));
@@ -1957,62 +2122,53 @@ function searchLogs() { currentLogPage = 1; renderLogs(); }
 function changeLogPage(direction) { currentLogPage += direction; renderLogs(); }
 
 /* ==============================================
-   ログ一覧描画 (時刻ズレ修正版)
+   ログ一覧描画 (時刻ズレ・クラッシュ修正版)
    ============================================== */
 function renderLogs() {
     const tbody = document.getElementById('log-tbody');
+    if (!tbody) return; 
     tbody.innerHTML = "";
-    if (!masterData.logs || masterData.logs.length === 0) {
-        document.getElementById('log-pagination').innerHTML = "データがありません";
+
+    // データが空でもエラーにならないように保護
+    const logsSource = masterData.logs || [];
+    const paginationContainer = document.getElementById('log-pagination');
+
+    if (logsSource.length === 0) {
+        if (paginationContainer) paginationContainer.innerHTML = "履歴データがありません";
         return;
     }
 
-    // ★追加: AWSからの時刻(UTC)を日本時間に変換する関数
     const parseUtcDate = (str) => {
-        if (!str) return new Date();
-        let s = String(str).trim();
-        // "YYYY-MM-DD HH:MM:SS" を "YYYY-MM-DDTHH:MM:SSZ" (ISO形式) に変換してUTC扱いにする
-        s = s.replace(/\//g, '-').replace(' ', 'T');
-        if (!s.endsWith('Z')) s += 'Z'; 
-        return new Date(s);
+        if (!str) return null;
+        // Lambdaから既に日本時間(JST)として届いているため、Z(UTC)を付けずにそのまま読み込む
+        return new Date(String(str).trim().replace(/-/g, '/'));
     };
 
-    let allLogs = [...masterData.logs].sort((a, b) => {
+    // 並び替え処理
+    let allLogs = [...logsSource].sort((a, b) => {
         return parseUtcDate(b.timestamp) - parseUtcDate(a.timestamp);
     });
 
     const filterText = document.getElementById('log-search-input').value.toLowerCase().trim();
-    
-    // 安全な日付パース関数 (日付だけの比較用は従来のままでOKだが、表示用はUTC変換を使う)
-    const safeDate = (str) => new Date(String(str).replace(/-/g, '/'));
-
     if (filterText) {
         const searchKata = hiraToKata(filterText); 
         const searchHira = kataToHira(filterText);
-
         allLogs = allLogs.filter(log => {
-            // 検索時は日本時間に変換した日付でチェック
             const d = parseUtcDate(log.timestamp);
             const dateStr = formatDate(d);
-            
-            let roomName = log.resourceName || "";
+            let roomName = String(log.resourceName || log.resourceId || "");
             const roomObj = masterData.rooms.find(r => String(r.roomId) === String(log.resourceId || log.resourceName));
             if (roomObj) roomName = roomObj.roomName;
-
             const operatorUser = masterData.users.find(u => u.userName === log.operatorName);
             const operatorKana = operatorUser ? (operatorUser.kana || "") : "";
 
             return (
                 dateStr.includes(filterText) ||
-                (log.operatorName && log.operatorName.toLowerCase().includes(filterText)) ||
-                (operatorKana && (
-                    operatorKana.includes(filterText) || 
-                    operatorKana.includes(searchKata) || 
-                    operatorKana.includes(searchHira)
-                )) ||
-                (log.action && log.action.toLowerCase().includes(filterText)) ||
+                (log.operatorName && String(log.operatorName).toLowerCase().includes(filterText)) ||
+                (operatorKana && (operatorKana.includes(filterText) || operatorKana.includes(searchKata) || operatorKana.includes(searchHira))) ||
+                (log.action && String(log.action).toLowerCase().includes(filterText)) ||
                 (roomName && roomName.toLowerCase().includes(filterText)) ||
-                (log.details && log.details.toLowerCase().includes(filterText))
+                (log.details && String(log.details).toLowerCase().includes(filterText))
             );
         });
     }
@@ -2030,26 +2186,20 @@ function renderLogs() {
     };
 
     const formatRange = (rangeStr) => {
-        if (!rangeStr || !rangeStr.includes(' - ')) return rangeStr;
-        const parts = rangeStr.split(' - ');
-        // 予約期間の時刻は手入力値(JST)なので、UTC変換せずそのままパース
-        const sDate = safeDate(parts[0]);
-        const eDate = safeDate(parts[1]);
+        if (!rangeStr || !String(rangeStr).includes(' - ')) return rangeStr;
+        const parts = String(rangeStr).split(' - ');
+        const sDate = new Date(String(parts[0]).replace(/-/g, '/'));
+        const eDate = new Date(String(parts[1]).replace(/-/g, '/'));
         if (isNaN(sDate.getTime()) || isNaN(eDate.getTime())) return rangeStr;
-
         const week = ['日', '月', '火', '水', '木', '金', '土'];
-        const dayIndex = sDate.getDay();
-        const w = isNaN(dayIndex) ? '?' : week[dayIndex];
-        
-        return `${sDate.getMonth() + 1}/${sDate.getDate()}(${w}) ${pad(sDate.getHours())}:${pad(sDate.getMinutes())} - ${pad(eDate.getHours())}:${pad(eDate.getMinutes())}`;
+        return `${sDate.getMonth() + 1}/${sDate.getDate()}(${week[sDate.getDay()]}) ${pad(sDate.getHours())}:${pad(sDate.getMinutes())} - ${pad(eDate.getHours())}:${pad(eDate.getMinutes())}`;
     };
 
     displayLogs.forEach(log => {
         const tr = document.createElement('tr');
-        let rawResName = log.resourceName || '-';
+        let rawResName = String(log.resourceName || log.resourceId || '-');
         let roomDisplay = rawResName;
         let detailLines = "";
-
         if (rawResName.includes('\n')) {
             const parts = rawResName.split('\n');
             const roomIdPart = parts[0].trim();
@@ -2060,27 +2210,22 @@ function renderLogs() {
             const roomObj = masterData.rooms.find(r => String(r.roomId) === String(rawResName));
             if (roomObj) roomDisplay = roomObj.roomName;
         }
-
-        if (detailLines) {
-            detailLines = detailLines.replace(/(\d+)/g, (match) => resolveName(match));
-        }
-
-        let timeDisplay = log.timeRange || '';
+        if (detailLines) detailLines = detailLines.replace(/(\d+)/g, (match) => resolveName(match));
+        let timeDisplay = String(log.timeRange || '');
         if (timeDisplay.includes('→')) {
             const ranges = timeDisplay.split('→');
             timeDisplay = `${formatRange(ranges[0].trim())} <br><span style="color:#e67e22; font-weight:bold;">↓</span><br> ${formatRange(ranges[1].trim())}`;
         } else {
             timeDisplay = formatRange(timeDisplay);
         }
-
         const detailHtml = `<strong>${roomDisplay}</strong>${detailLines ? `<br><span style="font-size:0.85em; color:#666;">${detailLines}</span>` : ''}<br><span style="font-size:0.8em; color:#999;">${timeDisplay}</span>`;
-
-        // ★修正: UTC変換した日付を表示
-        tr.innerHTML = `<td>${formatDate(parseUtcDate(log.timestamp))}</td><td>${log.operatorName}</td><td>${log.action}</td><td>${detailHtml}</td>`;
+        tr.innerHTML = `<td>${formatDate(parseUtcDate(log.timestamp))}</td><td>${log.operatorName || '-'}</td><td>${log.action || '-'}</td><td>${detailHtml}</td>`;
         tbody.appendChild(tr);
     });
 
-    renderPaginationControls(totalPages, totalItems, (currentLogPage - 1) * LOGS_PER_PAGE + 1, Math.min(currentLogPage * LOGS_PER_PAGE, totalItems));
+    if (paginationContainer) {
+        renderPaginationControls(totalPages, totalItems, (currentLogPage - 1) * LOGS_PER_PAGE + 1, Math.min(currentLogPage * LOGS_PER_PAGE, totalItems));
+    }
 }
 
 function renderPaginationControls(totalPages, totalItems, startCount, endCount) {
@@ -2117,7 +2262,7 @@ function pad(n) { return n < 10 ? '0'+n : n; }
 
 // ★修正: 曜日を追加 (安全対策済み)
 function formatDate(d) {
-    if (isNaN(d.getTime())) return "Invalid Date";
+    if (!d || isNaN(d.getTime())) return "日時不明";
     const week = ['日', '月', '火', '水', '木', '金', '土'];
     const dayIndex = d.getDay();
     const w = isNaN(dayIndex) ? '?' : week[dayIndex];
@@ -2169,7 +2314,6 @@ function initMapResizer() {
               // ▼▼▼【修正】サイズが正の場合のみ適用（非表示時の0px固定防止）▼▼▼
               if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
                   wrapper.style.width = entry.contentRect.width + 'px';
-                  wrapper.style.height = entry.contentRect.height + 'px';
               }
           }
       }
@@ -2222,7 +2366,6 @@ function closeAvailabilityModal() {
     const modal = document.getElementById('availabilityModal');
     if(modal) modal.style.display = 'none';
 }
-
 // 検索実行
 function execAvailabilitySearch() {
     const dateVal = document.getElementById('avail-date').value;
@@ -2264,15 +2407,38 @@ function execAvailabilitySearch() {
 
         const item = document.createElement('div');
         item.className = 'avail-list-item';
+        
+        // ▼▼▼ 修正：空きがない場合は背景色をグレーにし、クリック不可にする ▼▼▼
+        if (isBusy) {
+            item.style.backgroundColor = "#e0e0e0";
+            item.style.pointerEvents = "none";
+        }
+        // ▲▲▲ 修正ここまで ▲▲▲
 
-        const statusHtml = isBusy 
-            ? `<span class="status-ng">×</span>`
-            : `<span class="status-ok" onclick="transitionToBooking('${room.roomName}', '${dateVal}', '${startVal}', '${endVal}')">○</span>`;
+        let statusHtml = "";
+        if (isBusy) {
+            // 空きがない場合（グレーアウトした予約ボタン）
+            statusHtml = `
+              <div style="display:flex; align-items:center; gap:15px;">
+                 <span style="color:#999; font-weight:bold; font-size:0.9rem;">空きなし</span>
+                 <button class="btn-secondary" style="padding: 6px 15px; font-size: 0.85rem; opacity: 0.5; cursor: not-allowed;" disabled>予約</button>
+              </div>`;
+        } else {
+            // 空きがある場合（赤文字の「空き」＋緑の「予約」ボタン）
+            statusHtml = `
+              <div style="display:flex; align-items:center; gap:15px;">
+                 <span style="color:#e74c3c; font-weight:bold; font-size:0.9rem;">空き</span>
+                 <button class="btn-primary" style="padding: 6px 15px; font-size: 0.85rem; background:#27ae60; border-color:#27ae60;" onclick="transitionToBooking('${room.roomName}', '${dateVal}', '${startVal}', '${endVal}')">予約</button>
+              </div>`;
+        }
 
+        // ▼▼▼ 修正：空きがない場合は部屋名の文字色も薄いグレーにする ▼▼▼
         item.innerHTML = `
-            <div><div class="avail-room-name">${room.roomName}</div></div>
-            <div>${statusHtml}</div>
+            <div class="avail-room-name" ${isBusy ? 'style="color:#999;"' : ''}>${room.roomName}</div>
+            ${statusHtml}
         `;
+        // ▲▲▲ 修正ここまで ▲▲▲
+        
         resultContainer.appendChild(item);
         hasRoom = true;
     });
@@ -2286,67 +2452,50 @@ function execAvailabilitySearch() {
     }
 }
 /* ==============================================
-   11. 空き状況検索 ⇔ 予約画面連携 (修正版)
+   11. 空き状況検索 ⇔ 予約画面連携 (最終修正版)
    ============================================== */
 function transitionToBooking(roomName, dateVal, startVal, endVal) {
+  // 1. 空き状況モーダルを閉じる
   document.getElementById('availabilityModal').style.display = 'none';
 
-  document.getElementById('edit-res-id').value = ''; 
-  document.getElementById('modal-title').innerText = '新規予約';
-  
-  // 基本情報のセット
-  document.getElementById('input-date').value = dateVal;
-  document.getElementById('input-start').value = startVal;
+  // 2. 部屋IDの特定 (名前からIDを探す)
+  const roomObj = masterData.rooms.find(r => r.roomName === roomName);
+  const roomId = roomObj ? roomObj.roomId : null;
+
+  // 3. 時間を分解 (例: "16:30" -> 時:16, 分:30)
+  const [sH, sM] = startVal.split(':').map(Number);
+
+  // 4. 【最重要】共通の初期化関数 openModal を実行
+  // これにより、日付(dateVal)や時間、参加者の初期化が「正しい手順」で行われます
+  openModal(null, roomId, sH, sM, dateVal);
+
+  // 5. openModal が自動計算した「終了時間」を、空き状況画面で選んだ「終了時間」で上書き
   document.getElementById('input-end').value = endVal;
-  
-  // 部屋の選択
-  const roomSelect = document.getElementById('input-room');
-  for (let i = 0; i < roomSelect.options.length; i++) {
-    if (roomSelect.options[i].text === roomName) {
-      roomSelect.selectedIndex = i;
-      break;
-    }
-  }
 
-  // 参加者の初期化 (ログインユーザーをセット)
-  selectedParticipantIds.clear();
-  if (typeof currentUser !== 'undefined' && currentUser && currentUser.userId) {
-      selectedParticipantIds.add(String(currentUser.userId));
-  }
-
-  // ▼▼▼ SS連携データの復元処理 ▼▼▼
+  // 6. ▼▼▼ 元のコードにあった「特殊データ」の引き継ぎ処理をここで実行 ▼▼▼
   if (pendingExternalData) {
-      // 用件と備考をセット
+      // SS連携（外部）データがある場合
       if (pendingExternalData.title) document.getElementById('input-title').value = pendingExternalData.title;
-      else document.getElementById('input-title').value = "";
-
       if (pendingExternalData.note) document.getElementById('input-note').value = pendingExternalData.note;
-      else document.getElementById('input-note').value = "";
-
-      // SSで指定されたユーザーIDを参加者に追加
       if (pendingExternalData.userId) {
           const uId = String(pendingExternalData.userId);
           const targetUser = masterData.users.find(u => String(u.userId) === uId);
-          if (targetUser) {
-              selectedParticipantIds.add(uId);
-          }
+          if (targetUser) selectedParticipantIds.add(uId);
       }
-      
-      // データを使ったらクリアする（次回の手動予約に影響させないため）
-      pendingExternalData = null;
-  } else {
-      // 通常の手動予約時は空にする
-      document.getElementById('input-title').value = ""; 
-      document.getElementById('input-note').value = "";  
+      pendingExternalData = null; // 使用後はリセット
+  } 
+  else if (pendingTitle !== "") {
+      // 通知バナー（帰社報告）から来た場合
+      document.getElementById('input-title').value = pendingTitle;
+      // ※ここでは pendingTitle = ""; をしない（closeModalで消すため）
   }
-  // ▲▲▲ 復元処理ここまで ▲▲▲
 
-  document.getElementById('shuttle-search-input').value = ""; 
+  // 7. 参加者リストの表示を更新（追加した参加者を画面に反映）
   renderShuttleLists(); 
 
-  document.getElementById('bookingModal').style.display = 'flex';
+  // 8. ボタンの見た目を「空き状況から来た」モードに調整
   document.getElementById('btn-back-avail').style.display = 'inline-block'; 
-  document.getElementById('btn-modal-cancel').style.display = 'none';       
+  document.getElementById('btn-modal-cancel').style.display = 'none'; 
 }
 
 function backToAvailability() {
@@ -2618,7 +2767,7 @@ async function deleteBooking() {
     // 確実性を高めるため、対象IDを1つずつAPIに送信して削除します
     for (const res of deleteTargets) {
         
-        // ▼▼▼ 追加: ログ用に部屋名を取得する処理 ▼▼▼
+        // ▼▼▼ ①ここから追加：ログ用に部屋名を取得する処理 ▼▼▼
         const rId = res.resourceId || res._resourceId;
         const roomObj = masterData.rooms.find(r => String(r.roomId) === String(rId));
         const roomName = roomObj ? roomObj.roomName : (rId || "不明な部屋");
@@ -2629,7 +2778,7 @@ async function deleteBooking() {
             reservationId: res.id,
             operatorName: currentUser ? currentUser.userName : 'Unknown',
             
-            // ▼▼▼ 追加: 詳細情報を一緒に送ってログに残してもらう ▼▼▼
+            // ▼▼▼ ②ここから追加：削除APIに詳細情報を一緒に渡す ▼▼▼
             resourceId: rId,
             resourceName: roomName,
             startTime: res.startTime || res._startTime,
@@ -2673,7 +2822,6 @@ function generateUUID() {
 /* ==============================================
    追加: AWS プッシュ通知登録機能 (デバッグ用)
    ============================================== */
-
 // VAPIDキー（末尾の空白などを除去する .trim() を追加）
 const PUBLIC_VAPID_KEY = "BKOtogrGf8BJz00kR5xQuS5-_Gbkj_hQ_B3IUryPkxlDA9p4rAyZyn77CPTv-mwZnfKkCv8EBl1JXOVvoJfhnJk".trim();
 
@@ -2719,14 +2867,13 @@ async function registerPushNotification() {
 
     console.log("Push Subscription取得成功:", subscription);
 
-    // 4. バックエンドAPIへ送信してRDSに保存
+   // 4. バックエンドAPIへ送信してRDSに保存
     const params = {
       action: 'registerPush',
       userId: currentUser.userId,
       subscription: subscription
     };
     
-    // すでにある callAPI 関数を使って送信
     const response = await callAPI(params);
 
     if (response.status === 'success') {
@@ -2859,12 +3006,13 @@ async function checkUrlParamsForLogin() {
 
       return; 
   }
-
   // IDだけの場合など
   if (pUserId && loginInput) {
       loginInput.value = pUserId;
   }
 }
+/* script.js の末尾に追加 */
+
 // アプリ起動時に通知設定を自動チェック・更新する関数（サイレント実行）
 async function ensurePushSubscription() {
   // ログインしていない、または通知非対応なら何もしない
@@ -2889,7 +3037,7 @@ async function ensurePushSubscription() {
        });
     }
 
-    // 3. バックエンドAPIへ送信してRDSに保存
+   // 3. バックエンドAPIへ送信してRDSに保存
     await callAPI({
       action: 'registerPush',
       userId: currentUser.userId,
@@ -2897,51 +3045,1771 @@ async function ensurePushSubscription() {
     });
     
     console.log("プッシュ通知情報を自動更新しました");
-
   } catch (e) {
     console.error("通知情報の自動更新に失敗:", e);
+    // 自動更新の失敗はユーザーに通知せずログのみに残す
   }
 }
-/* ==============================================
-   追加: 帰社報告の通知と連携システム
-   ============================================== */
-function checkReturnNotifications() {
-  const reports = masterData.returnReports || [];
-  const notifEl = document.getElementById('return-notification');
-  
-  if (!notifEl) return;
+/* script.js に以下の関数を追加し、既存の関連箇所を修正 */
 
-  // 未読の報告がある場合
-  if (reports.length > 0) {
-    const report = reports[0]; // 一番古い未読を取り出す
-    document.getElementById('notif-adult').innerText = report.adult_count;
-    document.getElementById('notif-child').innerText = report.child_count;
+// A. 初期化時に週間バーを描画するように変更
+// initUI() の中で updateWeeklyBar(); を呼ぶようにしてください。
+
+/* script.js の updateWeeklyBar を updateMonthlyCalendar に書き換え */
+
+// script.js 内の updateMonthlyCalendar 関数を以下に書き換え
+
+function updateMonthlyCalendar() {
+    const container = document.getElementById('calendar-grid-container');
+    const dateInput = document.getElementById('map-date');
+    const titleEl = document.getElementById('display-month-year');
+    if (!container || !dateInput) return;
+
+    const selectedDate = new Date(dateInput.value);
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+
+    // 1. 年月表示の更新
+    if (titleEl) {
+        titleEl.innerText = `${year}年 ${month + 1}月`;
+    }
+
+    container.innerHTML = '';
+
+    // 2. 月の初日の曜日と最終日を取得
+    const firstDay = new Date(year, month, 1).getDay(); 
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    // 3. 曜日のラベルを表示したい場合はここに追加（オプション）
+    // 今回は画像に合わせて数字のみのグリッドにします
+
+    // 4. 初日の前の空白埋め
+    for (let i = 0; i < firstDay; i++) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'day-item other-month';
+        container.appendChild(emptyDiv);
+    }
+
+    // 5. 日付ボタンの生成
+    for (let d = 1; d <= lastDate; d++) {
+        const current = new Date(year, month, d);
+        const dayItem = document.createElement('div');
+        dayItem.className = 'day-item';
+
+        if (current.getDay() === 0) dayItem.classList.add('sun');
+        if (current.getDay() === 6) dayItem.classList.add('sat');
+        if (d === selectedDate.getDate()) dayItem.classList.add('active');
+
+        const dateStr = `${year}-${('0' + (month + 1)).slice(-2)}-${('0' + d).slice(-2)}`;
+
+        dayItem.onclick = () => {
+            dateInput.value = dateStr;
+            renderVerticalTimeline('map'); 
+            updateMonthlyCalendar();       
+        };
+
+        dayItem.innerText = d; // 余計なspanタグを使わず直接数字を入れる
+        container.appendChild(dayItem);
+    }
+}
+
+/* 月を切り替える関数（＜ ＞ ボタン用） */
+function shiftMonth(dir) {
+    const input = document.getElementById('map-date');
+    const d = new Date(input.value);
+    d.setMonth(d.getMonth() + dir);
     
-    // 通知バーを表示！
-    notifEl.style.display = 'block';
+    const y = d.getFullYear();
+    const m = ('0' + (d.getMonth() + 1)).slice(-2);
+    const day = ('0' + d.getDate()).slice(-2);
+    input.value = `${y}-${m}-${day}`;
     
-    // 通知バーをクリックした時の動き
-    notifEl.onclick = async () => {
-      // 1. 通知バーを隠す
-      notifEl.style.display = 'none';
-      
-      // 2. データベースを「既読」にする（裏側でこっそり通信）
-      callAPI({ action: 'markReturnRead', reportId: report.id });
-      
-      // 3. 予約画面（空き状況検索）にデータを渡して開く
-      // ※既存の「SS連携(pendingExternalData)」の仕組みを賢く再利用します！
-      pendingExternalData = {
-        title: '帰社（自動入力）',
-        note: `【帰社予定】\n大人: ${report.adult_count}名\n子供: ${report.child_count}名`
-      };
-      
-      openAvailabilityModal(); // 空室確認モーダルを開く
-      
-      // 少し待ってから、自動で空室検索を実行させる（お好みで！）
-      setTimeout(() => { execAvailabilitySearch(); }, 300);
+    renderVerticalTimeline('map');
+    updateMonthlyCalendar();
+}
+
+/* 初期化時にも実行するように initUI 内の関数名を変更してください */
+// initUI() の中で updateMonthlyCalendar(); を呼ぶように修正
+function shiftCalendar(dir) {
+    const input = document.getElementById('map-date');
+    const d = new Date(input.value);
+    
+    // 表示モードが「週」なら7日、それ以外なら1日移動
+    const amount = (typeof currentViewMode !== 'undefined' && currentViewMode === 'week') ? 7 : 1;
+    d.setDate(d.getDate() + (dir * amount));
+    
+    input.value = `${d.getFullYear()}-${('0' + (d.getMonth() + 1)).slice(-2)}-${('0' + d.getDate()).slice(-2)}`;
+    
+    renderVerticalTimeline('map');
+    updateWeeklyBar();
+}
+/* ==============================================
+   ★ カレンダー表示切替と移動の処理
+   ============================================== */
+/* script.js : switchCalendarView 関数を以下に差し替え */
+
+function switchCalendarView(viewMode, btnEl) {
+    const buttons = document.querySelectorAll('.btn-view');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    btnEl.classList.add('active');
+    
+    // 1. 切り替え前の状態を viewFilters に同期して保存
+    saveFilterState();
+
+    // 2. モードを更新
+    currentViewMode = viewMode;
+
+    // 3. 切り替え後のモード用のフィルターを復元
+    activeFilterIds = new Set(viewFilters[currentViewMode] || ['ALL']);
+
+    // UIの調整
+    document.getElementById('view-map-view').style.overflowY = 'auto';
+    document.querySelector('.calendar-scroll-area').style.height = 'auto';
+    
+    const verticalScrollTarget = document.getElementById('view-map-view');
+    if (verticalScrollTarget && verticalScrollTarget._monthScrollListener) {
+        verticalScrollTarget.removeEventListener('scroll', verticalScrollTarget._monthScrollListener);
+        verticalScrollTarget._monthScrollListener = null;
+    }
+
+    // 表示を更新
+    renderTimelineFilters(); 
+    renderVerticalTimeline('map');
+    
+    // 4. 切り替え後の状態（新しいモード）を保存
+    saveFilterState();
+}
+
+function shiftCalendar(dir) {
+    const input = document.getElementById('map-date');
+    const d = new Date(input.value);
+    
+    if (currentViewMode === 'day') {
+        d.setDate(d.getDate() + dir); 
+    } else if (currentViewMode === 'week') {
+        d.setDate(d.getDate() + (dir * 7)); 
+    } else if (currentViewMode === 'month') {
+        d.setMonth(d.getMonth() + dir); // 月表示なら1ヶ月移動
+    }
+    
+    const y = d.getFullYear();
+    const m = ('0' + (d.getMonth() + 1)).slice(-2);
+    const day = ('0' + d.getDate()).slice(-2);
+    input.value = `${y}-${m}-${day}`;
+    
+    renderVerticalTimeline('map');
+    updateMonthlyCalendar();
+}
+/* ==============================================
+   ★ 祝日データ取得処理
+   ============================================== */
+let holidaysCache = {}; // 祝日データを一時保存する変数
+
+function loadHolidays() {
+    fetch('https://holidays-jp.github.io/api/v1/date.json')
+        .then(res => res.json())
+        .then(data => {
+            holidaysCache = data;
+            // エラー箇所: updateWeeklyBar を updateMonthlyCalendar に変更
+            if (typeof updateMonthlyCalendar === 'function') {
+                updateMonthlyCalendar(); 
+            }
+        })
+        .catch(err => console.log('祝日データの取得に失敗しました', err));
+}
+/* ==============================================
+   ★ 新機能：週表示マトリックス生成関数 (自動高さ・クリック余白 強制確保版)
+   ============================================== */
+function renderMatrixWeekTimeline(mode, shouldScroll) {
+    let container = document.getElementById('rooms-container-map');
+    let timeAxisId = 'time-axis-map';
+    let dateInputId = 'map-date';
+    let headerContainer = document.getElementById('map-room-headers');
+    
+    let targetRooms = [];
+    // ▼▼▼ 修正：7階と6階の両方から部屋情報を取得する ▼▼▼
+    const floors = ['7', '6'];
+    floors.forEach(floor => {
+        const config = (floor === '7' && mapConfig['hq']) ? mapConfig['hq'] : mapConfig[floor];
+        if (config && config.areas) {
+            config.areas.forEach(area => {
+                const room = masterData.rooms.find(r => 
+                    String(r.roomId).trim() === String(area.id).trim()
+                );
+                if (room && !targetRooms.includes(room)) targetRooms.push(room);
+            });
+        }
+    });
+    // ▲▲▲ 修正ここまで ▲▲▲
+    if (!activeFilterIds.has('ALL')) {
+        targetRooms = targetRooms.filter(r => activeFilterIds.has(String(r.roomId)));
+    }
+    
+    // ▼▼▼ 追加：週表示の列を部屋名（数字）で並び替える ▼▼▼
+    targetRooms.sort((a, b) => a.roomName.localeCompare(b.roomName, 'ja', { numeric: true }));
+
+    if (headerContainer) {
+        headerContainer.style.display = 'flex';
+        headerContainer.innerHTML = "<div class='sticky-header-spacer matrix-axis-width'></div>";
+    }
+
+    if (!targetRooms || targetRooms.length === 0) {
+        if (container) container.innerHTML = "<div style='padding:20px;'>部屋データが見つかりません。</div>";
+        return;
+    }
+
+    // --- ★部屋ごとの最大高さを計算する ---
+    const roomHeights = {};
+    const MIN_SLOT_HEIGHT = 120; 
+    
+    const baseDate = new Date(document.getElementById(dateInputId).value);
+    const dayOfWeek = baseDate.getDay(); 
+    const startOfWeek = new Date(baseDate);
+    startOfWeek.setDate(baseDate.getDate() - dayOfWeek);
+    const dayLabels = ['日', '月', '火', '水', '木', '金', '土'];
+
+    // 予約を安全にパースする関数
+    const safeDate = (str) => new Date(String(str).replace(/-/g, '/'));
+
+    targetRooms.forEach(room => {
+        let maxCalculatedHeight = MIN_SLOT_HEIGHT;
+
+        for (let i = 0; i < 7; i++) {
+            const cur = new Date(startOfWeek);
+            cur.setDate(startOfWeek.getDate() + i);
+            const dateNum = formatDateToNum(cur);
+
+            const resList = masterData.reservations.filter(res => {
+                const rId = String(getVal(res, ['resourceId', 'roomId', 'room_id', 'resource_id']));
+                const rStart = safeDate(res._startTime || res.startTime);
+                return rId === String(room.roomId) && formatDateToNum(rStart) === dateNum;
+            });
+
+            if (resList.length > 0) {
+                // 基本の余白（下部55px + 上部5px + 余裕10px = 70px）
+                let dayHeight = 70; 
+                resList.forEach(res => {
+                    const title = getVal(res, ['title', 'subject', '件名', 'タイトル']) || '予約';
+                    const lines = Math.ceil(title.length / 11) || 1; 
+                    // 1予約あたりの高さを少し多め(約55px)に見積もる
+                    dayHeight += 14 + (lines * 16) + 25; 
+                });
+                if (dayHeight > maxCalculatedHeight) {
+                    maxCalculatedHeight = dayHeight;
+                }
+            }
+        }
+        roomHeights[room.roomId] = maxCalculatedHeight;
+    });
+
+    if (container) {
+        container.innerHTML = "";
+        container.style.height = "auto"; 
+        container.style.overflowY = "visible";
+        container.style.width = "100%"; 
+        container.style.overflowX = "visible"; 
+        container.style.display = "flex"; 
+        container.style.flexWrap = "nowrap";
+        container.style.flexDirection = "row";
+        container.style.alignItems = "flex-start"; 
+        container.style.position = "relative";
+    }
+
+    const axisContainer = document.getElementById(timeAxisId);
+    if (axisContainer) {
+        axisContainer.innerHTML = '';
+        axisContainer.style.height = "auto";
+        axisContainer.style.overflow = "visible";
+        axisContainer.style.display = "block";
+        axisContainer.classList.add('matrix-axis-width');
+
+        targetRooms.forEach(room => {
+            const lbl = document.createElement('div');
+            lbl.className = 'matrix-room-label';
+            // ★追加: 現在のハイライトIDと一致すればクラスを付与
+            if (String(room.roomId) === String(currentMapRoomId)) {
+                lbl.classList.add('target-highlight');
+            }
+            lbl.style.setProperty('height', roomHeights[room.roomId] + "px", "important");
+            lbl.style.setProperty('min-height', roomHeights[room.roomId] + "px", "important");
+            lbl.innerText = room.roomName;
+            lbl.style.cursor = "pointer";
+            lbl.onclick = () => {
+                currentMapRoomId = String(room.roomId); // IDを更新
+                saveFilterState();                      // 状態を保存
+                renderMatrixWeekTimeline('map');        // 週表示を再描画
+            };
+            axisContainer.appendChild(lbl);
+        });
+    }
+
+    for (let i = 0; i < 7; i++) {
+        const cur = new Date(startOfWeek);
+        cur.setDate(startOfWeek.getDate() + i);
+        const y = cur.getFullYear();
+        const m = ('0' + (cur.getMonth() + 1)).slice(-2);
+        const d = ('0' + cur.getDate()).slice(-2);
+        const dateStr = `${y}-${m}-${d}`;
+        const dateNum = formatDateToNum(cur);
+
+        const colDiv = document.createElement('div');
+        colDiv.className = 'matrix-date-col';
+
+        if (headerContainer) {
+            const sHead = document.createElement('div');
+            sHead.className = 'sticky-header-item matrix-header-item';
+            sHead.innerText = `${cur.getMonth()+1}/${cur.getDate()}(${dayLabels[cur.getDay()]})`;
+            if(cur.getDay() === 0 || (typeof holidaysCache !== 'undefined' && holidaysCache[dateStr])) sHead.style.color = '#d93025';
+            else if(cur.getDay() === 6) sHead.style.color = '#1a73e8';
+            if(dateStr === document.getElementById(dateInputId).value) sHead.style.backgroundColor = '#fff9c4'; 
+            headerContainer.appendChild(sHead);
+        }
+
+        targetRooms.forEach(room => {
+            const slot = document.createElement('div');
+            slot.className = 'matrix-room-slot';
+            if (String(room.roomId) === String(currentMapRoomId)) {
+                slot.classList.add('target-highlight');
+             }
+            slot.style.setProperty('height', roomHeights[room.roomId] + "px", "important");
+            slot.style.setProperty('min-height', roomHeights[room.roomId] + "px", "important");
+            slot.dataset.roomId = room.roomId;
+            slot.dataset.dateStr = dateStr;
+            slot.addEventListener('dragover', handleDragOver);
+            slot.addEventListener('drop', handleDropOnMatrix);
+            
+            slot.onclick = (e) => {
+                if (e.target.closest('.v-booking-bar')) return;
+                openModal(null, room.roomId, 9, 0, dateStr);
+            };
+
+            const resList = masterData.reservations.filter(res => {
+                const rId = String(getVal(res, ['resourceId', 'roomId', 'room_id', 'resource_id']));
+                const rStart = safeDate(res._startTime || res.startTime);
+                return rId === String(room.roomId) && formatDateToNum(rStart) === dateNum;
+            });
+
+            resList.sort((a,b) => safeDate(a._startTime||a.startTime) - safeDate(b._startTime||b.startTime));
+
+            resList.forEach(res => {
+                const start = safeDate(res._startTime || res.startTime);
+                const end = safeDate(res._endTime || res.endTime);
+                const tStr = `${pad(start.getHours())}:${pad(start.getMinutes())}-${pad(end.getHours())}:${pad(end.getMinutes())}`;
+                const title = getVal(res, ['title', 'subject', '件名', 'タイトル']) || '予約';
+
+                // ▼▼▼ ① ここから追加：参加者の名前を取得する処理 ▼▼▼
+                let participantsStr = "";
+                let pIdsRaw = getVal(res, ['participantIds', 'participant_ids', '参加者', 'メンバー']);
+                if (pIdsRaw) {
+                     const cleanIds = String(pIdsRaw).replace(/['"]/g, "").split(/[,、\s]+/);
+                     let names = [];
+                     cleanIds.forEach(id => {
+                         const trimId = id.trim();
+                         if(!trimId) return;
+                         const u = masterData.users.find(user => String(user.userId) === trimId);
+                         names.push(u ? u.userName : trimId);
+                     });
+                     if (names.length > 0) {
+                         if (names.length <= 4) participantsStr = names.join(', ');
+                         else {
+                             const showNames = names.slice(0, 4).join(', ');
+                             const restCount = names.length - 4;
+                             participantsStr = `${showNames} (+${restCount}名)`;
+                         }
+                     }
+                }
+
+                const bar = document.createElement('div');
+                let cssType = room.type || 'meeting';
+                if (!room.type) {
+                    if (room.roomName.indexOf("応接室") !== -1) cssType = "reception";
+                    else if (room.roomName.indexOf("Z") !== -1 || room.roomName.indexOf("Ｚ") !== -1) cssType = "zoom";
+                }
+                if (!['meeting', 'reception', 'zoom'].includes(cssType)) cssType = 'meeting';
+                bar.className = `v-booking-bar type-${cssType} matrix-booking-bar`;
+                if (res.isTentative) bar.classList.add('tentative-booking'); // ★追加
+                bar.draggable = true;
+                bar.dataset.resId = res.id;
+                bar.addEventListener('dragstart', handleDragStart);
+                bar.addEventListener('dragend', handleDragEnd);
+                
+                applyCustomTagColor(bar, title);
+                
+                bar.innerHTML = `
+                      <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tStr}</div>
+                      <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
+                      <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${participantsStr}</div>
+                `;
+                bar.onclick = (e) => { e.stopPropagation(); openDetailModal(res); };
+                slot.appendChild(bar);
+            });
+            colDiv.appendChild(slot);
+        });
+        if (container) container.appendChild(colDiv);
+    }
+    
+    const scrollableParent = container ? container.closest('.calendar-scroll-area') : null;
+    if (scrollableParent && headerContainer) {
+        headerContainer.scrollLeft = scrollableParent.scrollLeft;
+        scrollableParent.onscroll = () => { headerContainer.scrollLeft = scrollableParent.scrollLeft; };
+    }
+}
+/* ==============================================
+   ★ 新機能：月表示マトリックス生成関数 (トップヘッダー書き換え ＋ ドラッグスクロール対応版)
+   ============================================== */
+function renderMatrixMonthTimeline(mode, shouldScroll) {
+    let isDown = false, startX, startY, startScrollLeftVal, startScrollTopVal, hasDragged = false, isTouch = false, rafId = null;
+
+    let container = document.getElementById('rooms-container-map');
+    let timeAxisId = 'time-axis-map';
+    let dateInputId = 'map-date';
+    let headerContainer = document.getElementById('map-room-headers');
+    
+    let targetRooms = [];
+    // ▼▼▼ 修正：7階と6階の両方から部屋情報を取得する ▼▼▼
+    const floors = ['7', '6'];
+    floors.forEach(floor => {
+        const config = (floor === '7' && mapConfig['hq']) ? mapConfig['hq'] : mapConfig[floor];
+        if (config && config.areas) {
+            config.areas.forEach(area => {
+                const room = masterData.rooms.find(r => 
+                    String(r.roomId).trim() === String(area.id).trim()
+                );
+                if (room && !targetRooms.includes(room)) targetRooms.push(room);
+            });
+        }
+    });
+    // ▲▲▲ 修正ここまで ▲▲▲
+    if (!activeFilterIds.has('ALL')) {
+        targetRooms = targetRooms.filter(r => activeFilterIds.has(String(r.roomId)));
+    }
+
+    // ▼▼▼ 追加：月表示の列を部屋名（数字）で並び替える ▼▼▼
+    targetRooms.sort((a, b) => a.roomName.localeCompare(b.roomName, 'ja', { numeric: true }));
+
+    if (!targetRooms || targetRooms.length === 0) {
+        if (container) container.innerHTML = "<div style='padding:20px;'>部屋データが見つかりません。</div>";
+        return;
+    }
+
+    const axisContainer = document.getElementById(timeAxisId);
+    if (axisContainer) axisContainer.style.display = "none";
+
+    const baseDate = new Date(document.getElementById(dateInputId).value);
+    const year = baseDate.getFullYear();
+    const month = baseDate.getMonth();
+
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+
+    const startDate = new Date(firstDayOfMonth);
+    startDate.setDate(startDate.getDate() - startDate.getDay());
+
+    const endDate = new Date(lastDayOfMonth);
+    if (endDate.getDay() !== 6) {
+        endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
+    }
+
+    const totalDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+    const totalWeeks = totalDays / 7;
+
+    const safeDate = (str) => new Date(String(str).replace(/-/g, '/'));
+    const MIN_SLOT_HEIGHT = 120; 
+
+    const weekRoomHeights = [];
+    for (let w = 0; w < totalWeeks; w++) {
+        const roomHeights = {};
+        targetRooms.forEach(room => {
+            let maxCalculatedHeight = MIN_SLOT_HEIGHT;
+            for (let i = 0; i < 7; i++) {
+                const cur = new Date(startDate);
+                cur.setDate(startDate.getDate() + (w * 7) + i);
+                const dateNum = formatDateToNum(cur);
+
+                const resList = masterData.reservations.filter(res => {
+                    const rId = String(getVal(res, ['resourceId', 'roomId', 'room_id', 'resource_id']));
+                    const rStart = safeDate(res._startTime || res.startTime);
+                    return rId === String(room.roomId) && formatDateToNum(rStart) === dateNum;
+                });
+
+                if (resList.length > 0) {
+                    let dayHeight = 70; 
+                    resList.forEach(res => {
+                        const title = getVal(res, ['title', 'subject', '件名', 'タイトル']) || '予約';
+                        const lines = Math.ceil(title.length / 11) || 1; 
+                        dayHeight += 14 + (lines * 16) + 25; 
+                    });
+                    if (dayHeight > maxCalculatedHeight) maxCalculatedHeight = dayHeight;
+                }
+            }
+            roomHeights[room.roomId] = maxCalculatedHeight;
+        });
+        weekRoomHeights.push(roomHeights);
+    }
+
+    const updateTopStickyHeader = (weekIndex) => {
+        if (!headerContainer) return;
+        
+        const prevScrollLeft = headerContainer.scrollLeft;
+        headerContainer.style.display = 'flex';
+        headerContainer.innerHTML = ""; 
+        
+        const wSpacer = document.createElement('div');
+
+        // ▼▼▼ 修正：sticky-header-spacer を追加して左固定を復活させる ▼▼▼
+        wSpacer.className = "sticky-header-spacer matrix-axis-width"; 
+        // ▲▲▲ 修正ここまで ▲▲▲
+        
+        wSpacer.style.display = "flex";
+        wSpacer.style.alignItems = "center";
+        wSpacer.style.justifyContent = "center";
+        wSpacer.style.fontSize = "0.85rem";
+        wSpacer.style.fontWeight = "bold";
+        wSpacer.style.color = "#1a73e8";
+        wSpacer.style.borderRight = "1px solid #ccc";
+        wSpacer.style.backgroundColor = "#fafafa";
+        wSpacer.style.boxSizing = "border-box";
+        
+        wSpacer.innerText = `第${weekIndex + 1}週`;
+        headerContainer.appendChild(wSpacer);
+
+        const dayLabels = ['日', '月', '火', '水', '木', '金', '土'];
+        for (let i = 0; i < 7; i++) {
+            const cur = new Date(startDate);
+            cur.setDate(startDate.getDate() + (weekIndex * 7) + i);
+            const dateStr = `${cur.getMonth()+1}/${cur.getDate()}(${dayLabels[cur.getDay()]})`;
+            const fullDateStr = `${cur.getFullYear()}-${('0'+(cur.getMonth()+1)).slice(-2)}-${('0'+cur.getDate()).slice(-2)}`;
+
+            const sHead = document.createElement('div');
+            // ▼▼▼ 修正3：余分なクラスを外し、下の行と完全に同じクラスにする ▼▼▼
+            sHead.className = 'matrix-header-item month-matrix-slot';
+            sHead.style.height = "40px";
+            sHead.style.display = "flex";
+            sHead.style.alignItems = "center";
+            sHead.style.justifyContent = "center";
+            sHead.style.fontWeight = "bold";
+            sHead.style.fontSize = "0.85rem";
+            sHead.style.borderRight = "1px solid #eee";
+            sHead.style.boxSizing = "border-box";
+            
+            sHead.innerText = dateStr;
+            
+            if(cur.getDay() === 0 || (typeof holidaysCache !== 'undefined' && holidaysCache[fullDateStr])) sHead.style.color = '#d93025';
+            else if(cur.getDay() === 6) sHead.style.color = '#1a73e8';
+            else sHead.style.color = '#333';
+            
+            if(fullDateStr === document.getElementById(dateInputId).value) {
+                sHead.style.backgroundColor = '#fff9c4';
+            } else {
+                sHead.style.backgroundColor = '#fafafa';
+            }
+            headerContainer.appendChild(sHead);
+        }
+        headerContainer.scrollLeft = prevScrollLeft;
     };
-  } else {
-    // 未読がない場合は隠す
-    notifEl.style.display = 'none';
-  }
+
+    if (container) {
+        container.innerHTML = "";
+        container.style.height = "auto"; 
+        container.style.overflowY = "visible"; 
+        // ★幅を画面いっぱいに広げる
+        container.style.width = "100%"; 
+        container.style.overflowX = "visible"; 
+        container.style.display = "flex"; 
+        container.style.flexDirection = "column";
+        container.style.alignItems = "flex-start"; 
+        container.style.position = "relative";
+    }
+
+    let targetScrollTop = 0; 
+
+    for (let w = 0; w < totalWeeks; w++) {
+        const weekGroup = document.createElement('div');
+        weekGroup.className = "week-group-container";
+        weekGroup.style.display = "flex";
+        weekGroup.style.flexDirection = "column";
+        weekGroup.style.width = "100%";
+
+        const dateHeaderRow = document.createElement('div');
+        dateHeaderRow.style.display = "flex";
+        dateHeaderRow.style.backgroundColor = "#f1f3f4"; 
+        dateHeaderRow.style.borderBottom = "1px solid #ccc";
+        
+        const wSpacer = document.createElement('div');
+        wSpacer.className = "matrix-axis-width";
+        wSpacer.style.height = "30px";
+        wSpacer.style.display = "flex";
+        wSpacer.style.alignItems = "center";
+        wSpacer.style.justifyContent = "center";
+        wSpacer.style.fontSize = "0.75rem";
+        wSpacer.style.fontWeight = "bold";
+        wSpacer.style.color = "#1a73e8";
+        wSpacer.style.borderRight = "1px solid #ccc";
+        
+        // ★第X週のラベルを左に固定し、手前に出す
+        wSpacer.style.backgroundColor = "#f1f3f4";
+        wSpacer.style.position = "sticky";
+        wSpacer.style.left = "0";
+        wSpacer.style.zIndex = "85";
+
+        wSpacer.innerText = `第${w+1}週`;
+        dateHeaderRow.appendChild(wSpacer);
+
+        for (let i = 0; i < 7; i++) {
+            const cur = new Date(startDate);
+            cur.setDate(startDate.getDate() + (w * 7) + i);
+            const fullDateStr = `${cur.getFullYear()}-${('0'+(cur.getMonth()+1)).slice(-2)}-${('0'+cur.getDate()).slice(-2)}`;
+            
+            const dHeader = document.createElement('div');
+            // ★横幅均等化のクラスを追加
+            dHeader.className = "matrix-header-item month-matrix-slot";
+            dHeader.style.height = "30px";
+            dHeader.style.display = "flex";
+            dHeader.style.alignItems = "center";
+            dHeader.style.justifyContent = "center";
+            dHeader.style.fontWeight = "bold";
+            dHeader.style.fontSize = "0.9rem";
+            dHeader.style.borderRight = "1px solid #eee";
+            dHeader.innerText = `${cur.getMonth()+1}/${cur.getDate()}`;
+            
+            if (cur.getMonth() !== month) dHeader.style.opacity = "0.4"; 
+            if(cur.getDay() === 0 || (typeof holidaysCache !== 'undefined' && holidaysCache[fullDateStr])) dHeader.style.color = '#d93025';
+            else if(cur.getDay() === 6) dHeader.style.color = '#1a73e8';
+            if(fullDateStr === document.getElementById(dateInputId).value) {
+                targetScrollTop = weekGroup.offsetTop;
+            }
+            dateHeaderRow.appendChild(dHeader);
+        }
+        weekGroup.appendChild(dateHeaderRow);
+
+        targetRooms.forEach(room => {
+            const roomRow = document.createElement('div');
+            roomRow.style.display = "flex";
+            roomRow.style.width = "100%";
+            
+            const rowHeight = weekRoomHeights[w][room.roomId];
+
+            const lbl = document.createElement('div');
+            lbl.className = 'matrix-room-label matrix-axis-width';
+            if (String(room.roomId) === String(currentMapRoomId)) {
+                  lbl.classList.add('target-highlight');
+                }
+            lbl.style.setProperty('height', rowHeight + "px", "important");
+            lbl.style.setProperty('min-height', rowHeight + "px", "important");
+            lbl.style.position = "sticky";
+            lbl.style.left = "0"; 
+
+            // ★部屋名ラベルを手前に出す
+            lbl.style.zIndex = "90";
+            lbl.style.backgroundColor = "#fff";
+
+            lbl.style.borderRight = "1px solid #ccc";
+            lbl.innerText = room.roomName;
+            // ★追加: ラベルをクリックした時の処理
+            lbl.style.cursor = "pointer";
+            lbl.onclick = () => {
+                currentMapRoomId = String(room.roomId); // IDを更新
+                saveFilterState();                      // 状態を保存
+                renderMatrixMonthTimeline('map');       // 月表示を再描画
+            };
+            roomRow.appendChild(lbl);
+
+            for (let i = 0; i < 7; i++) {
+                const cur = new Date(startDate);
+                cur.setDate(startDate.getDate() + (w * 7) + i);
+                const dateNum = formatDateToNum(cur);
+                const fullDateStr = `${cur.getFullYear()}-${('0'+(cur.getMonth()+1)).slice(-2)}-${('0'+cur.getDate()).slice(-2)}`;
+
+                const slot = document.createElement('div');
+                // ★横幅均等化のクラスを追加し、固定幅のスタイルを削除
+                slot.className = 'matrix-room-slot month-matrix-slot';
+                if (String(room.roomId) === String(currentMapRoomId)) slot.classList.add('target-highlight');
+                slot.style.borderRight = "1px solid #eee";
+                
+                slot.style.setProperty('height', rowHeight + "px", "important");
+                slot.style.setProperty('min-height', rowHeight + "px", "important");
+                slot.dataset.roomId = room.roomId;
+                slot.dataset.dateStr = fullDateStr; // ※月表示の場合はfullDateStrを使います
+                slot.addEventListener('dragover', handleDragOver);
+                slot.addEventListener('drop', handleDropOnMatrix);
+                
+                slot.onclick = (e) => {
+                    if (!isTouch && hasDragged) return; 
+                    if (e.target.closest('.v-booking-bar')) return;
+                    openModal(null, room.roomId, 9, 0, fullDateStr);
+                };
+
+                const resList = masterData.reservations.filter(res => {
+                    const rId = String(getVal(res, ['resourceId', 'roomId', 'room_id', 'resource_id']));
+                    const rStart = safeDate(res._startTime || res.startTime);
+                    return rId === String(room.roomId) && formatDateToNum(rStart) === dateNum;
+                });
+
+                resList.sort((a,b) => safeDate(a._startTime||a.startTime) - safeDate(b._startTime||b.startTime));
+
+                resList.forEach(res => {
+                    const start = safeDate(res._startTime || res.startTime);
+                    const end = safeDate(res._endTime || res.endTime);
+                    const tStr = `${pad(start.getHours())}:${pad(start.getMinutes())}-${pad(end.getHours())}:${pad(end.getMinutes())}`;
+                    const title = getVal(res, ['title', 'subject', '件名', 'タイトル']) || '予約';
+
+                    // ▼▼▼ ① ここから追加：参加者の名前を取得する処理 ▼▼▼
+                    let participantsStr = "";
+                    let pIdsRaw = getVal(res, ['participantIds', 'participant_ids', '参加者', 'メンバー']);
+                    if (pIdsRaw) {
+                         const cleanIds = String(pIdsRaw).replace(/['"]/g, "").split(/[,、\s]+/);
+                         let names = [];
+                         cleanIds.forEach(id => {
+                             const trimId = id.trim();
+                             if(!trimId) return;
+                             const u = masterData.users.find(user => String(user.userId) === trimId);
+                             names.push(u ? u.userName : trimId);
+                         });
+                         if (names.length > 0) {
+                             if (names.length <= 4) participantsStr = names.join(', ');
+                             else {
+                                 const showNames = names.slice(0, 4).join(', ');
+                                 const restCount = names.length - 4;
+                                 participantsStr = `${showNames} (+${restCount}名)`;
+                             }
+                         }
+                    }
+
+                    const bar = document.createElement('div');
+                    let cssType = room.type || 'meeting';
+                    if (!room.type) {
+                        if (room.roomName.indexOf("応接室") !== -1) cssType = "reception";
+                        else if (room.roomName.indexOf("Z") !== -1 || room.roomName.indexOf("Ｚ") !== -1) cssType = "zoom";
+                    }
+                    if (!['meeting', 'reception', 'zoom'].includes(cssType)) cssType = 'meeting';
+                    bar.className = `v-booking-bar type-${cssType} matrix-booking-bar`;
+                    if (res.isTentative) bar.classList.add('tentative-booking'); // ★追加
+                    bar.draggable = true;
+                    bar.dataset.resId = res.id;
+                    bar.addEventListener('dragstart', handleDragStart);
+                    bar.addEventListener('dragend', handleDragEnd);
+
+                    applyCustomTagColor(bar, title);
+                    
+                    bar.innerHTML = `
+                          <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tStr}</div>
+                          <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
+                          <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${participantsStr}</div>
+                    `;
+                    bar.onclick = (e) => { 
+                        if (!isTouch && hasDragged) return; 
+                        e.stopPropagation(); 
+                        openDetailModal(res); 
+                    };
+                    slot.appendChild(bar);
+                });
+                roomRow.appendChild(slot);
+            }
+            weekGroup.appendChild(roomRow);
+        });
+        
+        if (container) container.appendChild(weekGroup);
+    }
+    
+    const scrollableParent = container ? container.closest('.calendar-scroll-area') : null;
+    const verticalScrollTarget = document.getElementById('view-map-view'); 
+
+    if (scrollableParent) {
+        if (headerContainer && verticalScrollTarget) {
+            headerContainer.style.paddingRight = "0px";
+            headerContainer.style.boxSizing = "border-box";
+            headerContainer.scrollLeft = scrollableParent.scrollLeft;
+            scrollableParent.onscroll = () => { 
+                headerContainer.scrollLeft = scrollableParent.scrollLeft; 
+            };
+        }
+        
+        if (shouldScroll && targetScrollTop > 0 && verticalScrollTarget) {
+            setTimeout(() => {
+                verticalScrollTarget.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
+            }, 300);
+        }
+
+        if (verticalScrollTarget) {
+            const weekGroups = container.querySelectorAll('.week-group-container');
+            let currentActiveWeek = -1;
+
+            const handleVerticalScroll = () => {
+                let stickyLine = headerContainer ? headerContainer.getBoundingClientRect().bottom + 30 : 150;
+
+                let newActiveWeek = 0;
+                weekGroups.forEach((group, index) => {
+                    const groupTop = group.getBoundingClientRect().top;
+                    if (groupTop < stickyLine) {
+                        newActiveWeek = index;
+                    }
+                });
+
+                if (newActiveWeek !== currentActiveWeek) {
+                    currentActiveWeek = newActiveWeek;
+                    updateTopStickyHeader(currentActiveWeek);
+                }
+            };
+
+            if (verticalScrollTarget._monthScrollListener) {
+                verticalScrollTarget.removeEventListener('scroll', verticalScrollTarget._monthScrollListener);
+            }
+            verticalScrollTarget._monthScrollListener = handleVerticalScroll;
+            verticalScrollTarget.addEventListener('scroll', handleVerticalScroll, { passive: true });
+            
+            setTimeout(handleVerticalScroll, 50);
+        }
+
+        // ▼▼▼ ドラッグ処理のブロックを適切な位置に配置 ▼▼▼
+        if (verticalScrollTarget) {
+            scrollableParent.addEventListener('touchstart', () => { isTouch = true; }, { passive: true });
+            scrollableParent.style.cursor = "default";
+            
+            scrollableParent.onwheel = (e) => { 
+                if (e.ctrlKey) return; 
+                if (e.deltaX !== 0 || e.shiftKey) { 
+                    e.preventDefault(); 
+                    scrollableParent.scrollLeft += (e.deltaX || e.deltaY); 
+                } 
+            };
+            
+            scrollableParent.onmousedown = (e) => {
+                if (isTouch || e.target.closest('.v-booking-bar') || ['INPUT', 'SELECT', 'BUTTON', 'TEXTAREA'].includes(e.target.tagName)) return;
+                isDown = true; 
+                hasDragged = false; 
+                scrollableParent.style.cursor = "grabbing";
+                startX = e.pageX; 
+                startY = e.pageY; 
+                startScrollLeftVal = scrollableParent.scrollLeft; 
+                startScrollTopVal = verticalScrollTarget.scrollTop;
+                document.addEventListener('mousemove', onMouseMove); 
+                document.addEventListener('mouseup', onMouseUp);
+            };
+            
+            const onMouseMove = (e) => {
+                if (!isDown || isTouch) return; 
+                e.preventDefault(); 
+                if (rafId) return;
+                rafId = requestAnimationFrame(() => {
+                    const walkX = (e.pageX - startX) * 1.5; 
+                    const walkY = (e.pageY - startY) * 1.5;
+                    if (Math.abs(walkX) > 5 || Math.abs(walkY) > 5) hasDragged = true;
+                    scrollableParent.scrollLeft = startScrollLeftVal - walkX;
+                    verticalScrollTarget.scrollTop = startScrollTopVal - walkY;
+                    rafId = null;
+                });
+            };
+            
+            const onMouseUp = () => {
+                isDown = false; 
+                scrollableParent.style.cursor = "default";
+                if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+                document.removeEventListener('mousemove', onMouseMove); 
+                document.removeEventListener('mouseup', onMouseUp);
+                setTimeout(() => { hasDragged = false; }, 50);
+            };
+        }
+    }
+}
+/* ==============================================
+   ★ 修正: 帰社報告の通知機能（バナー型）
+   ============================================== */
+function checkReturnReports() {
+    const container = document.getElementById('notification-container');
+    if (!container) return;
+    container.innerHTML = ''; 
+
+    if (!masterData.returnReports || masterData.returnReports.length === 0) return;
+
+    masterData.returnReports.forEach(report => {
+        let userName = report.user_id;
+        const userObj = masterData.users.find(u => String(u.userId) === String(report.user_id));
+        if (userObj) userName = userObj.userName;
+
+        const banner = document.createElement('div');
+        banner.className = 'notification-banner';
+        
+        // ★修正: 第5引数に「帰社予定時刻 (report.return_time)」を追加して渡す
+        banner.onclick = () => markReportAsRead(report.id, userName, report.adult_count, report.child_count, report.return_time);
+        
+        banner.innerHTML = `🔔 ${userName} さんから帰社報告が届いています！　（大人 ${report.adult_count}名 / 子供 ${report.child_count}名）　👉 クリックして予約画面を開く`;
+        
+        container.appendChild(banner);
+    });
+}
+
+/* ==============================================
+   ★ 修正：バナーをクリックしたら「空き状況」へ飛び、時間をセットして自動検索
+   ============================================== */
+async function markReportAsRead(reportId, userName, adult, child, returnTime) {
+    activeReportId = reportId; 
+    pendingTitle = `${userName}、大人${adult}名、子供${child}名、帰社`;
+
+    const modal = document.getElementById('availabilityModal');
+    if (!modal) return;
+
+    // 1. モーダルを「非表示のまま」日付と時間をセット
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = ('0' + (now.getMonth() + 1)).slice(-2);
+    const d = ('0' + now.getDate()).slice(-2);
+    document.getElementById('avail-date').value = `${y}-${m}-${d}`;
+
+    // 帰社予定時刻があればセット、なければ現在時刻
+    if (returnTime) {
+        const cleanTime = String(returnTime).replace(/[^0-9:]/g, ''); 
+        if (cleanTime && cleanTime.includes(':')) {
+            document.getElementById('avail-start').value = cleanTime;
+        } else {
+            let h = now.getHours();
+            let min = now.getMinutes() < 30 ? 0 : 30;
+            document.getElementById('avail-start').value = `${('0'+h).slice(-2)}:${('0'+min).slice(-2)}`;
+        }
+    } else {
+        let h = now.getHours();
+        let min = now.getMinutes() < 30 ? 0 : 30;
+        document.getElementById('avail-start').value = `${('0'+h).slice(-2)}:${('0'+min).slice(-2)}`;
+    }
+
+    if (typeof autoSetAvailEndTime === 'function') {
+        autoSetAvailEndTime();
+    }
+
+    // 2. モーダルを表示する「前」に検索処理を実行し、結果を描画する
+    if (typeof execAvailabilitySearch === 'function') {
+        execAvailabilitySearch();
+    }
+
+    // 3. 検索結果がセットされた状態でモーダルを表示する（チラつき防止！）
+    modal.style.display = 'flex';
+}
+/* ==============================================
+   ★ 追加: 受信履歴画面の処理
+   ============================================== */
+let currentReceiveLogPage = 1;
+const RECEIVE_LOGS_PER_PAGE = 50;
+
+function openReceiveHistoryFromMenu() {
+    const dropdown = document.getElementById("settings-dropdown");
+    if(dropdown) dropdown.classList.remove("show");
+    switchTab('receive-logs');
+}
+
+function searchReceiveLogs() { currentReceiveLogPage = 1; renderReceiveLogs(); }
+function changeReceiveLogPage(direction) { currentReceiveLogPage += direction; renderReceiveLogs(); }
+
+function renderReceiveLogs() {
+    const tbody = document.getElementById('receive-log-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    
+    // データが空でもエラーにならないように保護
+    const reportsSource = masterData.allReturnReports || [];
+    const paginationContainer = document.getElementById('receive-log-pagination');
+
+    if (reportsSource.length === 0) {
+        if (paginationContainer) paginationContainer.innerHTML = "受信データがありません";
+        return;
+    }
+
+    const parseUtcDate = (str) => {
+        if (!str) return new Date();
+        let s = String(str).trim();
+        s = s.replace(/\//g, '-').replace(' ', 'T');
+        if (!s.endsWith('Z')) s += 'Z'; 
+        return new Date(s);
+    };
+
+    let allReports = [...reportsSource].sort((a, b) => {
+        return parseUtcDate(b.created_at) - parseUtcDate(a.created_at);
+    });
+
+    const filterText = document.getElementById('receive-log-search-input').value.toLowerCase().trim();
+    if (filterText) {
+        const searchKata = hiraToKata(filterText); 
+        const searchHira = kataToHira(filterText);
+        allReports = allReports.filter(report => {
+            let userName = String(report.user_id || "");
+            const userObj = masterData.users.find(u => String(u.userId) === String(report.user_id));
+            if (userObj) userName = userObj.userName;
+            const operatorKana = userObj ? (userObj.kana || "") : "";
+            return (
+                userName.toLowerCase().includes(filterText) ||
+                operatorKana.includes(filterText) || 
+                operatorKana.includes(searchKata) || 
+                operatorKana.includes(searchHira)
+            );
+        });
+    }
+
+    const totalItems = allReports.length;
+    const totalPages = Math.ceil(totalItems / RECEIVE_LOGS_PER_PAGE) || 1;
+    if (currentReceiveLogPage < 1) currentReceiveLogPage = 1;
+    if (currentReceiveLogPage > totalPages) currentReceiveLogPage = totalPages;
+
+    const displayReports = allReports.slice((currentReceiveLogPage - 1) * RECEIVE_LOGS_PER_PAGE, currentReceiveLogPage * RECEIVE_LOGS_PER_PAGE);
+
+    displayReports.forEach(report => {
+        const tr = document.createElement('tr');
+        let userName = report.user_id;
+        const userObj = masterData.users.find(u => String(u.userId) === String(report.user_id));
+        if (userObj) userName = userObj.userName;
+
+        const dateStr = formatDate(parseUtcDate(report.created_at));
+        const detailStr = `大人 ${report.adult_count}名 / 子供 ${report.child_count}名`;
+        const statusHtml = report.is_read ? 
+            `<span style="color:#666; font-size:0.85em; padding:4px 8px; background:#eee; border-radius:4px;">確認済</span>` : 
+            `<span style="color:#fff; font-size:0.85em; padding:4px 8px; background:#e74c3c; border-radius:4px; font-weight:bold;">未確認</span>`;
+
+        tr.innerHTML = `
+            <td>${dateStr}</td>
+            <td><strong>${userName}</strong></td>
+            <td>${detailStr}</td>
+            <td style="text-align:center;">${statusHtml}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    if (paginationContainer) {
+        renderReceivePaginationControls(totalPages, totalItems, (currentReceiveLogPage - 1) * RECEIVE_LOGS_PER_PAGE + 1, Math.min(currentReceiveLogPage * RECEIVE_LOGS_PER_PAGE, totalItems));
+    }
+}
+
+function renderReceivePaginationControls(totalPages, totalItems, startCount, endCount) {
+    const container = document.getElementById('receive-log-pagination');
+    container.innerHTML = "";
+    if (totalItems === 0) { container.innerText = "一致する履歴はありません"; return; }
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.innerText = "< 前へ";
+    prevBtn.disabled = (currentReceiveLogPage === 1);
+    if (currentReceiveLogPage === 1) prevBtn.classList.add('disabled');
+    prevBtn.onclick = () => changeReceiveLogPage(-1);
+    container.appendChild(prevBtn);
+
+    const infoSpan = document.createElement('span');
+    infoSpan.className = 'page-info';
+    infoSpan.innerText = ` ${startCount} - ${endCount} / ${totalItems}件 `;
+    container.appendChild(infoSpan);
+    
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.innerText = "次へ >";
+    nextBtn.disabled = (currentReceiveLogPage === totalPages);
+    if (currentReceiveLogPage === totalPages) nextBtn.classList.add('disabled');
+    nextBtn.onclick = () => changeReceiveLogPage(1);
+    container.appendChild(nextBtn);
+}
+/* ==============================================
+   ★ 追加: 毎分00秒にマップの色を更新するタイマー
+   ============================================== */
+let mapUpdateTimer = null;
+function startMapStatusUpdater() {
+    if (mapUpdateTimer) return; // 既に起動済みなら何もしない
+    
+    const syncAndStart = () => {
+        const now = new Date();
+        // 次の00秒までのミリ秒を計算（例: 30秒なら残り30000ミリ秒）
+        const delay = 60000 - (now.getSeconds() * 1000 + now.getMilliseconds());
+        
+        setTimeout(() => {
+            // 00秒になった瞬間に一回マップを更新
+            if (document.getElementById('view-map-view') && document.getElementById('view-map-view').classList.contains('active')) {
+                renderHQMap();
+            }
+            // その後、60秒ごとにずっと実行し続ける
+            mapUpdateTimer = setInterval(() => {
+                if (document.getElementById('view-map-view') && document.getElementById('view-map-view').classList.contains('active')) {
+                    renderHQMap();
+                }
+            }, 60000);
+        }, delay);
+    };
+    syncAndStart();
+}
+
+// 画面読み込み時にタイマーを起動
+document.addEventListener("DOMContentLoaded", () => {
+    startMapStatusUpdater();
+});
+/* ==============================================
+   追加: 用件の定型文タグ入力機能
+   ============================================== */
+function toggleTitleTag(btnElement) {
+    const inputEl = document.getElementById('input-title');
+    const tagText = btnElement.getAttribute('data-tag');
+    let currentText = inputEl.value.trim();
+
+    if (btnElement.classList.contains('active')) {
+        // オフにする: スペース区切りで配列化し、該当するタグを除外して再結合
+        btnElement.classList.remove('active');
+        let textArray = currentText.split(/\s+/);
+        textArray = textArray.filter(text => text !== tagText);
+        inputEl.value = textArray.join(' ');
+    } else {
+        // オンにする: 文字列の末尾に追加 (順番通りに左から並ぶ)
+        btnElement.classList.add('active');
+        if (currentText.length > 0) {
+            inputEl.value = currentText + ' ' + tagText;
+        } else {
+            inputEl.value = tagText;
+        }
+    }
+}
+
+// テキストボックスの内容とボタンの見た目を同期する関数
+function syncTitleTags() {
+    const currentText = document.getElementById('input-title').value;
+    const buttons = document.querySelectorAll('.title-tag-btn');
+    buttons.forEach(btn => {
+        const tagText = btn.getAttribute('data-tag');
+        if (currentText.includes(tagText)) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
+/* ==============================================
+   追加: 定型文タグの動的生成・作成・削除機能
+   ============================================== */
+let isTagDeleteMode = false;
+
+function renderTitleTags() {
+    const container = document.getElementById('title-tags-area');
+    if (!container) return;
+    container.innerHTML = "";
+
+    // データベースから取得したタグをループで生成
+    (masterData.titleTags || []).forEach(tag => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'title-tag-btn';
+        btn.setAttribute('data-tag', tag.tag_name);
+        btn.innerText = tag.tag_name;
+
+        // 削除モード時の見た目
+        if (isTagDeleteMode) {
+            btn.style.border = "1px dashed #c0392b";
+            btn.style.color = "#c0392b";
+            btn.style.backgroundColor = "#fdeaea";
+        }
+
+        // ▼▼▼ 修正：正しい関数(deleteTitleTag)を呼び出す ▼▼▼
+        btn.onclick = () => {
+            if (isTagDeleteMode) {
+                // ★修正：データベースのID (tag.id) も一緒に渡す
+                deleteTitleTag(tag.id, tag.tag_name, btn);
+            } else {
+                toggleTitleTag(btn);
+            }
+        };
+        container.appendChild(btn);
+    });
+
+    // 「＋新規作成」ボタン
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'title-tag-btn';
+    addBtn.style.backgroundColor = '#4caf50';
+    addBtn.style.color = 'white';
+    addBtn.style.border = 'none';
+    addBtn.innerText = '＋追加';
+    addBtn.style.opacity = isTagDeleteMode ? "0.3" : "1.0";
+    addBtn.onclick = () => addNewTitleTag();
+    container.appendChild(addBtn);
+
+    // 「×削除」モード切替ボタン
+    if ((masterData.titleTags || []).length > 0) {
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'title-tag-btn';
+        delBtn.style.backgroundColor = isTagDeleteMode ? '#c0392b' : '#e74c3c';
+        delBtn.style.color = 'white';
+        delBtn.style.border = 'none';
+        delBtn.innerText = isTagDeleteMode ? '完了' : '×削除';
+        delBtn.onclick = () => {
+            isTagDeleteMode = !isTagDeleteMode;
+            renderTitleTags();
+        };
+        container.appendChild(delBtn);
+    }
+
+    // 描画が終わったら選択状態を同期
+    if (!isTagDeleteMode) syncTitleTags();
+}
+
+function addNewTitleTag() {
+    if (isTagDeleteMode) return;
+    openTagColorSettingModal();
+}
+
+// ★修正：受け取る項目に tagId を追加
+async function deleteTitleTag(tagId, tagName, btn) {
+    if (!confirm(`定型文「${tagName}」を削除しますか？`)) return;
+
+    document.getElementById('loading').style.display = 'flex';
+    
+    // ★修正：サーバーに送信するデータにIDを含める
+    const params = {
+        action: 'deleteTitleTag',
+        id: tagId,       // APIの仕様に合わせて念のためidとして送信
+        tagId: tagId,    // APIの仕様に合わせて念のためtagIdとしても送信
+        tagName: tagName
+    };
+    
+    try {
+        const result = await callAPI(params);
+        document.getElementById('loading').style.display = 'none';
+        
+        if (result.status === 'success') {
+            // 見た目だけでなく、ブラウザが記憶している裏側のデータからも確実に消す
+            if (masterData && masterData.titleTags) {
+                // ★名前ではなく、確実なIDを使って一致するものを消去する
+                masterData.titleTags = masterData.titleTags.filter(tag => tag.id !== tagId);
+            }
+            
+            // 画面のボタンを消す
+            if (btn) {
+                btn.remove();
+            }
+            
+            // 削除が終わったら、自動的に「削除モード」を解除する
+            if (typeof isTagDeleteMode !== 'undefined' && isTagDeleteMode) {
+                const tagsArea = document.getElementById('title-tags-area');
+                if (tagsArea) {
+                    const deleteBtn = Array.from(tagsArea.querySelectorAll('button')).find(b => b.innerText.includes('完了'));
+                    if (deleteBtn) {
+                        deleteBtn.click(); 
+                    }
+                }
+            }
+        } else {
+            alert("削除に失敗しました: " + result.message);
+        }
+    } catch(e) {
+        document.getElementById('loading').style.display = 'none';
+        alert("通信エラーが発生しました");
+    }
+}
+/* ==============================================
+   追加: ドラッグ＆ドロップで予約を移動する機能
+   ============================================== */
+let draggedResId = null;
+let dragOffsetY = 0; // ★追加：枠の一番上からマウスまでの「ズレ」を記憶する変数
+
+function handleDragStart(e) {
+    draggedResId = this.dataset.resId;
+    
+    // ▼▼▼ 追加：枠の一番上からマウスがどれくらい下にあるかを計算・記憶 ▼▼▼
+    const rect = this.getBoundingClientRect();
+    dragOffsetY = e.clientY - rect.top;
+    // ▲▲▲ 追加ここまで ▲▲▲
+
+    e.dataTransfer.effectAllowed = 'move';
+    // ドラッグ中の要素を半透明にする
+    setTimeout(() => this.style.opacity = '0.5', 0);
+}
+
+function handleDragEnd(e) {
+    this.style.opacity = '1';
+    draggedResId = null;
+}
+
+function handleDragOver(e) {
+    e.preventDefault(); // ここで許可しないとドロップできない
+    e.dataTransfer.dropEffect = 'move';
+}
+
+// 縦軸（日表示）でのドロップ処理：座標から時間を計算
+// 縦軸（日表示）でのドロップ処理：座標から時間を計算
+async function handleDropOnTimeline(e) {
+    e.preventDefault();
+    if (!draggedResId) return;
+
+    const targetBody = e.target.closest('.room-grid-body');
+    if (!targetBody) return;
+
+    const roomId = targetBody.dataset.roomId;
+    const dateStr = targetBody.dataset.dateStr;
+
+    // ドロップされたY座標から時間を計算
+    const rect = targetBody.getBoundingClientRect();
+    // ▼▼▼ 修正：マウスの座標から「ズレ」を引いて、枠の【一番上】の座標を計算する ▼▼▼
+    let dropY = (e.clientY - rect.top) - dragOffsetY;
+    if (dropY < 0) dropY = 0; // 枠外（上）にはみ出さないように保護
+    // ▲▲▲ 修正ここまで ▲▲▲
+
+    // 画面の高さ設定（hourRowHeights）から時間枠を再構築
+    const tops = {};
+    let currentTop = 0;
+    for (let h = START_HOUR; h < END_HOUR; h++) {
+        tops[h] = currentTop;
+        currentTop += (hourRowHeights[h] || BASE_HOUR_HEIGHT);
+    }
+    tops[END_HOUR] = currentTop;
+
+    let droppedHour = -1;
+    let droppedMin = 0;
+
+    for (let h = START_HOUR; h < END_HOUR; h++) {
+        const top = tops[h];
+        const bottom = tops[h + 1];
+        if (dropY >= top && dropY < bottom) {
+            droppedHour = h;
+            const height = bottom - top;
+            const relativeY = dropY - top;
+            
+            // 15分刻みでスナップ（吸着）させる
+            const minRatio = relativeY / height;
+            if (minRatio < 0.25) droppedMin = 0;
+            else if (minRatio < 0.5) droppedMin = 15;
+            else if (minRatio < 0.75) droppedMin = 30;
+            else droppedMin = 45;
+            break;
+        }
+    }
+
+    if (droppedHour === -1) return;
+    await execDragAndDropUpdate(draggedResId, roomId, dateStr, droppedHour, droppedMin);
+}
+
+// マトリックス（週・月表示）でのドロップ処理：時間は元のまま日付と部屋だけ移動
+async function handleDropOnMatrix(e) {
+    e.preventDefault();
+    if (!draggedResId) return;
+
+    const targetSlot = e.target.closest('.matrix-room-slot');
+    if (!targetSlot) return;
+
+    const roomId = targetSlot.dataset.roomId;
+    const dateStr = targetSlot.dataset.dateStr;
+
+    // 元の予約の時間をそのまま引き継ぐ
+    const res = masterData.reservations.find(r => r.id === draggedResId);
+    if (!res) return;
+    const oldStart = new Date(res._startTime || res.startTime);
+    
+    await execDragAndDropUpdate(draggedResId, roomId, dateStr, oldStart.getHours(), oldStart.getMinutes());
+}
+
+// 共通：更新APIの実行
+async function execDragAndDropUpdate(resId, newRoomId, newDateStr, newHour, newMin) {
+    const res = masterData.reservations.find(r => r.id === resId);
+    if (!res) return;
+
+    const oldStart = new Date(res._startTime || res.startTime);
+    const oldEnd = new Date(res._endTime || res.endTime);
+    const durationMs = oldEnd.getTime() - oldStart.getTime();
+
+    const newStart = new Date(`${newDateStr.replace(/-/g, '/')} ${pad(newHour)}:${pad(newMin)}:00`);
+    const newEnd = new Date(newStart.getTime() + durationMs);
+
+    const roomObj = masterData.rooms.find(r => String(r.roomId) === String(newRoomId));
+    const roomName = roomObj ? roomObj.roomName : "不明な部屋";
+    const timeStr = `${newStart.getMonth()+1}/${newStart.getDate()} ${pad(newStart.getHours())}:${pad(newStart.getMinutes())} - ${pad(newEnd.getHours())}:${pad(newEnd.getMinutes())}`;
+
+    // 安全のため、移動の確認を行う
+    const isSeries = !!(res.series_id || res.seriesId || res.group_id);
+    let msg = `以下の内容に予約を移動しますか？\n\n【移動先】 ${roomName}\n【日　時】 ${timeStr}`;
+    if (isSeries) {
+        msg += `\n\n※これは繰り返し予約の一部です。今回移動するのは「この1回分」のみとなり、他の繰り返し予定からは切り離されます。`;
+    }
+
+    if (!confirm(msg)) return;
+
+    document.getElementById('loading').style.display = 'flex';
+
+    let pIds = res.participantIds || res.participant_ids || "";
+    if (Array.isArray(pIds)) pIds = pIds.join(',');
+
+    const oldStartStr = `${oldStart.getFullYear()}/${pad(oldStart.getMonth()+1)}/${pad(oldStart.getDate())} ${pad(oldStart.getHours())}:${pad(oldStart.getMinutes())}`;
+    const oldEndStr = `${oldEnd.getFullYear()}/${pad(oldEnd.getMonth()+1)}/${pad(oldEnd.getDate())} ${pad(oldEnd.getHours())}:${pad(oldEnd.getMinutes())}`;
+    const newStartStr = `${newStart.getFullYear()}/${pad(newStart.getMonth()+1)}/${pad(newStart.getDate())} ${pad(newStart.getHours())}:${pad(newStart.getMinutes())}`;
+    const newEndStr = `${newEnd.getFullYear()}/${pad(newEnd.getMonth()+1)}/${pad(newEnd.getDate())} ${pad(newEnd.getHours())}:${pad(newEnd.getMinutes())}`;
+    
+    const logTimeRange = `${oldStartStr} - ${oldEndStr} → ${newStartStr} - ${newEndStr}`;
+
+    let logResourceName = newRoomId;
+    const oldRoomId = String(res._resourceId || res.resourceId);
+    if (oldRoomId !== String(newRoomId)) {
+        const oldRoomObj = masterData.rooms.find(r => String(r.roomId) === oldRoomId);
+        const oldName = oldRoomObj ? oldRoomObj.roomName : "元の部屋";
+        logResourceName = `${newRoomId}\n(元: ${oldName})`;
+    }
+
+    const params = {
+        action: 'updateReservation',
+        reservationId: res.id,
+        resourceId: newRoomId,
+        resourceName: logResourceName, 
+        timeRangeStr: logTimeRange,
+        actionType: 'ドラッグ移動',
+        startTime: `${newStart.getFullYear()}/${pad(newStart.getMonth()+1)}/${pad(newStart.getDate())} ${pad(newStart.getHours())}:${pad(newStart.getMinutes())}`,
+        endTime: `${newEnd.getFullYear()}/${pad(newEnd.getMonth()+1)}/${pad(newEnd.getDate())} ${pad(newEnd.getHours())}:${pad(newEnd.getMinutes())}`,
+        participantIds: pIds,
+        title: getVal(res, ['title', 'subject', '件名', 'タイトル']),
+        note: getVal(res, ['note', 'description', '備考', 'メモ']),
+        operatorName: currentUser ? currentUser.userName : 'Unknown',
+        seriesId: null // ドラッグ移動時は単発扱いにする
+    };
+
+    try {
+        const result = await callAPI(params);
+        if (result.status === 'success') {
+            loadAllData(true);
+        } else {
+            alert('移動に失敗しました: ' + result.message);
+            loadAllData(true);
+        }
+    } catch (err) {
+        console.error(err);
+        alert('通信エラーが発生しました');
+        loadAllData(true);
+    } finally {
+        document.getElementById('loading').style.display = 'none';
+    }
+}
+// ★追加: 拠点タブを切り替える関数
+function setBranchFilter(branch, btnElement) {
+    activeBranchFilter = branch;
+    
+    // ▼▼▼ 修正：クリックされたボタンと同じコンテナ内のタブだけを対象にする ▼▼▼
+    const container = btnElement.closest('.branch-tabs-container');
+    if (container) {
+        const tabs = container.querySelectorAll('.branch-tab');
+        tabs.forEach(t => t.classList.remove('active'));
+    }
+    btnElement.classList.add('active');
+    
+    // リストを再描画
+    renderShuttleLists(); 
+}
+/* ==============================================
+   追加：予約内容をコピーして新規作成する処理
+   ============================================== */
+function openCopyBookingModal() {
+    const res = currentDetailRes; // 開いている詳細画面のデータを取得
+    if (!res) return;
+
+    // 1. まず詳細モーダルを閉じる
+    closeDetailModal();
+
+    // 2. 部屋IDと日付・時間を取得
+    const rId = res._resourceId || res.resourceId || res.roomId;
+    const startObj = new Date(res._startTime || res.startTime);
+    const endObj = new Date(res._endTime || res.endTime);
+    
+    const y = startObj.getFullYear();
+    const m = ('0' + (startObj.getMonth() + 1)).slice(-2);
+    const d = ('0' + startObj.getDate()).slice(-2);
+    const dateStr = `${y}-${m}-${d}`;
+
+    // 3. 「新規予約」として予約モーダルを開く（時間と場所をセット）
+    openModal(null, rId, startObj.getHours(), startObj.getMinutes(), dateStr);
+
+    // 4. 終了時間・用件(タイトル)・備考を元のデータで上書きする
+    document.getElementById('input-end').value = `${pad(endObj.getHours())}:${pad(endObj.getMinutes())}`;
+    document.getElementById('input-title').value = getVal(res, ['title', 'subject', '件名', 'タイトル']) || "";
+    document.getElementById('input-note').value = getVal(res, ['note', 'description', '備考', 'メモ']) || "";
+
+    // 5. 参加者をコピーする
+    selectedParticipantIds.clear();
+    originalParticipantIds.clear();
+    
+    const pIds = getVal(res, ['participantIds', 'participant_ids', '参加者', 'メンバー']);
+    if (pIds) {
+        let idList = [];
+        if (Array.isArray(pIds)) idList = pIds;
+        else if (typeof pIds === 'string') idList = pIds.split(/[,、\s]+/);
+        else if (typeof pIds === 'number') idList = [pIds];
+
+        idList.forEach(rawId => { 
+            if(rawId !== null && rawId !== undefined && String(rawId).trim() !== "") {
+                const targetId = String(rawId).trim();
+                const user = masterData.users.find(u => {
+                    const uId = String(u.userId).trim();
+                    return uId === targetId || (!isNaN(uId) && !isNaN(targetId) && Number(uId) === Number(targetId));
+                });
+                const finalId = user ? String(user.userId).trim() : targetId;
+                selectedParticipantIds.add(finalId); 
+                originalParticipantIds.add(finalId); 
+            }
+        });
+    }
+
+    // 6. 画面のリストやタグの見た目を更新
+    renderShuttleLists(); 
+    syncTitleTags();
+}
+
+/* ==============================================
+   追加：用件キーワード色設定モーダルのプログラム（完成版）
+   ============================================== */
+let customTagColors = {}; // ユーザーが設定した色を記憶する変数
+const TAG_COLORS_STORAGE_KEY = 'roompin_tag_colors_v1';
+
+// 初期ロード時にブラウザから設定を読み込む
+function loadCustomTagColors() {
+    const saved = localStorage.getItem(TAG_COLORS_STORAGE_KEY);
+    if (saved) {
+        try { customTagColors = JSON.parse(saved); } 
+        catch (e) { customTagColors = {}; }
+    }
+}
+loadCustomTagColors(); // スクリプト読み込み時に即時実行
+
+let selectedTagColor = ''; 
+
+// 1. 画面を開く
+function openTagColorSettingModal() {
+    // 入力欄をクリア
+    document.getElementById('input-new-color-tag-name').value = '';
+    selectedTagColor = ''; // 色の選択をリセット
+
+    // カラーパレットを作成して表示
+    generateTagColorPalette();
+
+    // モーダルを開く
+    const modal = document.getElementById('tagColorSettingModal');
+    if (modal) modal.style.display = 'flex'; // ★ 'flex' にすることで画面中央に表示されます
+}
+// ★追加：リストから選んだら、文字と設定済みの色を自動でセットする機能
+function loadExistingTagColor() {
+    const selectBox = document.getElementById('select-edit-tag');
+    const inputName = document.getElementById('input-new-color-tag-name');
+    const keyword = selectBox.value;
+
+    if (keyword) {
+        // 1. 入力欄に選んだ文字を自動で入れる
+        inputName.value = keyword;
+        
+        // 2. すでに色が保存されていれば、カラーピッカーにセットして選択状態にする
+        if (customTagColors[keyword]) {
+            const savedColor = customTagColors[keyword];
+            const customInput = document.getElementById('custom-color-picker');
+            if (customInput) {
+                customInput.value = savedColor;
+                handleTagColorSelect(customInput, savedColor);
+            }
+        } else {
+            // 色が設定されていなければリセット
+            const allBtns = document.querySelectorAll('.color-choice-btn');
+            allBtns.forEach(btn => btn.classList.remove('selected'));
+            selectedTagColor = '';
+        }
+    }
+}
+
+function closeTagColorSettingModal() {
+    const modal = document.getElementById('tagColorSettingModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// カラーパレット（エクセル風の基本色 ＋ その他の色）を生成
+function generateTagColorPalette() {
+    const paletteArea = document.getElementById('tag-color-palette');
+    if (!paletteArea) return;
+    paletteArea.innerHTML = ''; 
+
+    // エクセルによくある基本色を多めに用意
+    const PREDEFINED_TAG_COLORS = [
+        '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#27ae60', '#1abc9c',
+        '#3498db', '#2980b9', '#9b59b6', '#ef5585', '#34495e', '#95a5a6'
+    ];
+
+    PREDEFINED_TAG_COLORS.forEach(color => {
+        const btn = document.createElement('div');
+        btn.className = 'color-choice-btn';
+        btn.style.backgroundColor = color;
+        btn.onclick = () => handleTagColorSelect(btn, color);
+        paletteArea.appendChild(btn);
+    });
+
+    // 「その他の色」ピッカー（自由選択）と文字入力欄を追加
+    const customWrapper = document.createElement('div');
+    customWrapper.style.display = 'flex';
+    customWrapper.style.alignItems = 'center';
+    customWrapper.style.gap = '5px';
+    customWrapper.style.marginLeft = '10px';
+    customWrapper.style.paddingLeft = '10px';
+    customWrapper.style.borderLeft = '1px solid #ccc';
+
+    const customInput = document.createElement('input');
+    customInput.type = 'color'; // OS標準のカラーピッカー
+    customInput.id = 'custom-color-picker';
+    customInput.value = '#000000'; 
+    customInput.style.width = '32px';
+    customInput.style.height = '32px';
+    customInput.style.padding = '0';
+    customInput.style.border = 'none';
+    customInput.style.cursor = 'pointer';
+    customInput.style.background = 'transparent';
+    
+    // ▼▼▼ 追加：文字で色を入力できるボックス（ef5585のような入力に対応） ▼▼▼
+    const hexInput = document.createElement('input');
+    hexInput.type = 'text';
+    hexInput.placeholder = '例: ef5585';
+    hexInput.style.width = '75px';
+    hexInput.style.padding = '4px 6px';
+    hexInput.style.border = '1px solid #ccc';
+    hexInput.style.borderRadius = '4px';
+    hexInput.style.fontSize = '0.85rem';
+
+    // カラーピッカーを触った時の動き（文字入力欄も連動させる）
+    const syncFromPicker = (e) => {
+        handleTagColorSelect(customInput, e.target.value);
+        hexInput.value = e.target.value; // 文字欄にも反映
+    };
+    customInput.onclick = syncFromPicker;
+    customInput.oninput = syncFromPicker;
+
+    // 文字入力欄に「ef5585」などを打ち込んだ時の動き
+    hexInput.oninput = (e) => {
+        let val = e.target.value.trim();
+        // #がなければ自動で付ける
+        if (val.length > 0 && !val.startsWith('#')) {
+            val = '#' + val; 
+        }
+        // 6桁の色コードとして正しければ反映（大文字小文字どちらでもOK）
+        if (/^#[0-9A-F]{6}$/i.test(val)) {
+            customInput.value = val; // パレットの色を変える
+            handleTagColorSelect(customInput, val); // 選択状態にする
+        }
+    };
+
+    customWrapper.appendChild(customInput);
+    customWrapper.appendChild(hexInput); // 今までの「その他の色...」という文字の代わりに入力欄を置く
+    paletteArea.appendChild(customWrapper);
+}
+function handleTagColorSelect(clickedBtn, color) {
+    const allBtns = document.querySelectorAll('.color-choice-btn');
+    allBtns.forEach(btn => btn.classList.remove('selected'));
+    const picker = document.getElementById('custom-color-picker');
+    if(picker) picker.style.boxShadow = 'none';
+
+    if (clickedBtn.tagName === 'INPUT') {
+        clickedBtn.style.boxShadow = '0 0 0 2px #333';
+    } else {
+        clickedBtn.classList.add('selected');
+        if(picker) picker.value = color; 
+    }
+    selectedTagColor = color; 
+}
+
+// 登録ボタンを押した時の処理（既存タグの更新 ＆ 新規タグの作成）
+async function saveNewTagWithColor() {
+    const keyword = document.getElementById('input-new-color-tag-name').value.trim();
+    if (!keyword || !selectedTagColor) {
+        alert('キーワードと色を両方選択してください。\n※「その他の色」を使う場合は、一度そのアイコンをクリックしてください。');
+        return;
+    }
+    
+    // 1. 色をブラウザに記憶させる
+    customTagColors[keyword] = selectedTagColor;
+    localStorage.setItem(TAG_COLORS_STORAGE_KEY, JSON.stringify(customTagColors));
+    
+    // ★追加：既存のキーワードかどうかをチェックする
+    const tagsArea = document.getElementById('title-tags-area');
+    let exists = false;
+    if (tagsArea) {
+        const btns = tagsArea.querySelectorAll('button');
+        btns.forEach(btn => { 
+            // ボタンの文字と完全一致するかチェック
+            if (btn.innerText.trim() === keyword || btn.getAttribute('data-tag') === keyword) {
+                exists = true; 
+            }
+        });
+    }
+
+    if (exists) {
+        // ★既存のキーワードなら、サーバーに追加する必要はないので色だけ塗って完了！
+        closeTagColorSettingModal();
+        if (typeof refreshUI === 'function') refreshUI();
+        return; 
+    }
+    
+    // 2. 新しいキーワードの場合のみ、定型文タグ（ボタン）としてサーバーに保存する
+    document.getElementById('loading').style.display = 'flex';
+    const params = {
+        action: 'createTitleTag',
+        tagName: keyword
+    };
+    
+    try {
+        const result = await callAPI(params);
+        document.getElementById('loading').style.display = 'none';
+        
+        if (result.status === 'success') {
+            closeTagColorSettingModal(); 
+            await loadAllData(true); 
+            if (typeof refreshUI === 'function') refreshUI(); 
+            
+            if (tagsArea) {
+                const newBtn = document.createElement('button');
+                newBtn.type = 'button';
+                newBtn.className = 'title-tag-btn'; 
+                newBtn.setAttribute('data-tag', keyword); 
+                newBtn.innerText = keyword;
+                
+                newBtn.onclick = () => {
+                    if (typeof toggleTitleTag === 'function') {
+                        toggleTitleTag(newBtn);
+                    } else {
+                        const titleInput = document.getElementById('input-title');
+                        if (titleInput) titleInput.value = keyword;
+                    }
+                    if (typeof syncTitleTags === 'function') syncTitleTags();
+                };
+                
+                const addBtn = Array.from(tagsArea.querySelectorAll('button')).find(b => b.innerText.includes('＋追加'));
+                if (addBtn) {
+                    tagsArea.insertBefore(newBtn, addBtn);
+                } else {
+                    tagsArea.appendChild(newBtn);
+                }
+            }
+        } else {
+            closeTagColorSettingModal(); 
+            if (typeof refreshUI === 'function') refreshUI(); 
+            alert(`色は保存されましたが、タグの追加に失敗しました: ${result.message}`);
+        }
+    } catch(e) {
+        document.getElementById('loading').style.display = 'none';
+        alert("通信エラーが発生しました");
+    }
+}
+
+// ★色を背景色（透明度あり）に変換して塗るための補助機能
+function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+function applyCustomTagColor(bar, titleText) {
+    if (!titleText) return;
+    
+    let firstKeyword = null;
+    let firstIndex = -1;
+
+    // 登録されている全てのキーワードをチェックし、一番手前（左側）にあるものを探す
+    for (const keyword in customTagColors) {
+        const index = titleText.indexOf(keyword);
+        if (index !== -1) {
+            // まだ見つかっていないか、より手前で見つかった言葉を「一番手前」として記憶する
+            if (firstIndex === -1 || index < firstIndex) {
+                firstIndex = index;
+                firstKeyword = keyword;
+            }
+        }
+    }
+
+    // 一番手前にあったキーワードの色を塗る
+    if (firstKeyword) {
+        const color = customTagColors[firstKeyword];
+        bar.style.borderTop = `4px solid ${color}`;
+        bar.style.backgroundColor = hexToRgba(color, 0.15);
+    }
 }
