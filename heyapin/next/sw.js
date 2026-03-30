@@ -1,4 +1,4 @@
-const CACHE_NAME = 'roompin-cache-v-fix12';
+const CACHE_NAME = 'roompin-cache-v-fix13';
 // ▲▲▲ 変更ここまで ▲▲▲
 
 const urlsToCache = [
@@ -58,7 +58,10 @@ self.addEventListener('fetch', (event) => {
             // (S3などで / にアクセスした際、オフラインでも index.html を表示させるため)
             const url = new URL(event.request.url);
             if (url.pathname.endsWith('/') || url.pathname.endsWith('/index.html')) {
-                return caches.match('./index.html');
+                return caches.match('./index.html').then((cacheResponse) => {
+                    // キャッシュに index.html があればそれを返し、無ければネットワークへ取りに行く
+                    return cacheResponse || fetch(event.request);
+                });
             }
 
             // 3. なければネットワークに取りに行く
