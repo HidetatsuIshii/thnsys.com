@@ -513,6 +513,8 @@ function refreshUI() {
   updateRoomSelect();
   renderTimelineFilters();
 
+  renderTitleTags();
+
   if (document.getElementById('view-receive-logs').classList.contains('active')) {
       renderReceiveLogs();
   }
@@ -4171,13 +4173,22 @@ function renderTitleTags() {
     if (!container) return;
     container.innerHTML = "";
 
+    // ★修正ポイント：重複排除用のSetを関数の最初に定義する
+    const renderedTags = new Set();
+
     // データベースから取得したタグをループで生成
     (masterData.titleTags || []).forEach(tag => {
+        const safeTagName = String(tag.tag_name).trim();
+        
+        // すでに同じ名前のタグを描画していたらスキップする（二重表示の防止）
+        if (!safeTagName || renderedTags.has(safeTagName)) return; 
+        renderedTags.add(safeTagName);
+
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'title-tag-btn';
-        btn.setAttribute('data-tag', tag.tag_name);
-        btn.innerText = tag.tag_name;
+        btn.setAttribute('data-tag', safeTagName);
+        btn.innerText = safeTagName;
 
         // 削除モード時の見た目
         if (isTagDeleteMode) {
@@ -4186,10 +4197,11 @@ function renderTitleTags() {
             btn.style.backgroundColor = "#fdeaea";
         }
 
+        // ▼▼▼ 修正：正しい関数(deleteTitleTag)を呼び出す ▼▼▼
         btn.onclick = () => {
             if (isTagDeleteMode) {
                 // ★修正：データベースのID (tag.id) も一緒に渡す
-                deleteTitleTag(tag.id, tag.tag_name, btn);
+                deleteTitleTag(tag.id, safeTagName, btn);
             } else {
                 toggleTitleTag(btn);
             }
@@ -4733,34 +4745,9 @@ async function saveNewTagWithColor() {
         document.getElementById('loading').style.display = 'none';
         
         if (result.status === 'success') {
+            // モーダルを閉じて、サーバーから最新データを取得して画面を再描画するだけでOK
             closeTagColorSettingModal(); 
             await loadAllData(true); 
-            if (typeof refreshUI === 'function') refreshUI(); 
-            
-            if (tagsArea) {
-                const newBtn = document.createElement('button');
-                newBtn.type = 'button';
-                newBtn.className = 'title-tag-btn'; 
-                newBtn.setAttribute('data-tag', keyword); 
-                newBtn.innerText = keyword;
-                
-                newBtn.onclick = () => {
-                    if (typeof toggleTitleTag === 'function') {
-                        toggleTitleTag(newBtn);
-                    } else {
-                        const titleInput = document.getElementById('input-title');
-                        if (titleInput) titleInput.value = keyword;
-                    }
-                    if (typeof syncTitleTags === 'function') syncTitleTags();
-                };
-                
-                const addBtn = Array.from(tagsArea.querySelectorAll('button')).find(b => b.innerText.includes('＋追加'));
-                if (addBtn) {
-                    tagsArea.insertBefore(newBtn, addBtn);
-                } else {
-                    tagsArea.appendChild(newBtn);
-                }
-            }
         } else {
             closeTagColorSettingModal(); 
             if (typeof refreshUI === 'function') refreshUI(); 
