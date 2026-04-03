@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>部屋ピン</title>
 <link rel="icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=fix48">
+  <link rel="stylesheet" href="style.css?v=fix58">
   <link rel="manifest" href="manifest.json">  
   <link rel="apple-touch-icon" href="icon-192-v4.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -118,23 +118,47 @@
             <div id="calendar-grid-container" class="calendar-month-grid"></div>
           </div>
           
-          <div class="nav-right">
-        <div class="view-switch">
-          <button class="btn-view active" onclick="switchCalendarView('day', this)">日</button>
-          <button class="btn-view" onclick="switchCalendarView('week', this)">週</button>
-          <button class="btn-view" onclick="switchCalendarView('month', this)">月</button>
+          <div class="nav-right" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+            <div class="view-switch">
+              <button class="btn-view active" onclick="switchCalendarView('day', this)">日</button>
+              <button class="btn-view" onclick="switchCalendarView('week', this)">週</button>
+              <button class="btn-view" onclick="switchCalendarView('month', this)">月</button>
+            </div>
+            <div class="sidebar-toggle-group">
+               <button id="btn-toggle-waiting" class="btn-sidebar-toggle" onclick="toggleSidebar('waiting')">待ち案内</button>
+               <button id="btn-toggle-pickup" class="btn-sidebar-toggle" onclick="toggleSidebar('pickup')">迎え案内</button>
+            </div>
+            </div>
         </div>
-      </div>
+      </div> 
+
+      <div class="timeline-content-wrapper">
+        
+        <div class="timeline-calendar-part">
+          <div id="map-room-headers" class="sticky-room-header-row"></div>
+          <div class="calendar-scroll-area">
+            <div class="time-axis-col" id="time-axis-map"></div>
+            <div class="rooms-container" id="rooms-container-map"></div>
+          </div>
         </div>
-      </div> <div id="map-room-headers" class="sticky-room-header-row"></div>
 
-      <div class="calendar-scroll-area">
+        <div id="timeline-sidebar" class="timeline-sidebar">
+          <div class="sidebar-title-bar">
+            <span id="sidebar-title">待ち案内</span>
+            <span class="close-sidebar-icon" onclick="closeSidebar()">&times;</span>
+          </div>
+          
+          <div id="sidebar-content" class="sidebar-content-area">
+            <div id="sidebar-list-container">
+              <p style="font-size:0.85rem; color:#666; text-align:center; margin-top:20px; margin-bottom:20px;">（※ここにリストが表示されます）</p>
+            </div>
+            
+            <button type="button" class="btn-primary" style="width: 100%; padding: 8px; font-size: 0.85rem;" onclick="openGuestAddModal()">＋ 追加</button>
+          </div>
+        </div>
 
-      <div class="calendar-scroll-area">
-        <div class="time-axis-col" id="time-axis-map"></div>
-        <div class="rooms-container" id="rooms-container-map"></div>
       </div>
-    </div>
+      </div>
   
   <button class="fab-avail-btn" onclick="openAvailabilityModal()">
     <span>空室</span><span>確認</span>
@@ -519,6 +543,41 @@
 
   </div>
 </div>
-<script src="script.js?v=fix39"></script>
+
+<div id="guestAddModal" class="modal">
+  <div class="modal-content modal-md">
+    <div class="modal-top-bar">
+      <h3 id="guest-modal-title">案内を追加</h3>
+      <span class="close-icon" onclick="closeGuestAddModal()">&times;</span>
+    </div>
+    
+    <label>お客様の名前</label>
+    <input type="text" id="guest-name-input" placeholder="例: 山田 様">
+    
+    <label>何時から</label>
+    <div class="time-picker-wrapper" style="width: 120px; margin-bottom: 15px;">
+      <input type="text" id="guest-time-input" placeholder="10:00" onblur="formatTimeInput(this)" onkeydown="handleTimeArrowKeys(event, this)" onclick="selectTimePart(this)">
+      <span class="time-picker-arrow">▼</span>
+    </div>
+
+    <label>担当営業名（直接入力・または下から選択）</label>
+    <input type="text" id="guest-reps-input" placeholder="例: 佐藤、鈴木">
+
+    <div class="shuttle-box guest-shuttle-box" style="margin-top: 5px;">
+      <div class="shuttle-header">候補者一覧（練馬）</div>
+      <div class="shuttle-search" style="padding: 5px; background: #fff; border-bottom: 1px solid #ddd;">
+          <input type="text" id="guest-shuttle-search" placeholder="名前で検索..." oninput="renderGuestShuttle()" style="margin: 0;">
+      </div>
+      <div class="shuttle-list guest-shuttle-list" id="guest-candidates"></div>
+    </div>
+
+    <div class="modal-footer" style="margin-top: 20px;">
+      <button type="button" class="btn-secondary" onclick="closeGuestAddModal()">キャンセル</button>
+      <button type="button" class="btn-primary" onclick="saveGuestEntry()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js?v=fix70"></script>
 </body>
 </html>
