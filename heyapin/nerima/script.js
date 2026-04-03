@@ -97,6 +97,19 @@ window.onload = () => {
 checkUrlParamsForLogin();
   const d = new Date();
   
+  // カレンダー（日付）が変更されたら、サイドバーのリストも同期させる
+document.addEventListener('DOMContentLoaded', () => {
+    const dateInput = document.getElementById('map-date');
+    if (dateInput) {
+        dateInput.addEventListener('change', () => {
+            // 日付が変わった瞬間に、サイドバーのデータを今日の日付分で抽出し直す
+            if (typeof syncGuestListFromMaster === 'function') {
+                syncGuestListFromMaster();
+            }
+        });
+    }
+});
+
   // ローカル時間（端末の時間）に基づいて YYYY-MM-DD 文字列を作成
   const y = d.getFullYear();
   const m = ('0' + (d.getMonth() + 1)).slice(-2);
@@ -512,6 +525,7 @@ function refreshUI() {
   renderGroupButtons();
   updateRoomSelect();
   renderTimelineFilters();
+  if (typeof syncGuestListFromMaster === 'function') syncGuestListFromMaster();
 
   renderTitleTags();
 
@@ -982,8 +996,50 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
         body.style.cursor = "pointer"; 
         body.dataset.roomId = col.id;
         body.dataset.dateStr = col.dateStr;
-        body.addEventListener('dragover', handleDragOver);
-        body.addEventListener('drop', handleDropOnTimeline);
+
+        // ドラッグ中の表示許可
+        body.ondragover = (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        };
+
+        // ドロップされた時の処理（案内データの引き継ぎ ＋ 既存予約の移動）
+        body.ondrop = async (e) => {
+            e.preventDefault();
+            
+            // 案内データ（JSON）があるか確認
+            const jsonData = e.dataTransfer.getData('application/json');
+            
+            if (jsonData) {
+                // 【パターンA：案内データの引き継ぎ】
+                const data = JSON.parse(jsonData);
+                if (data.name || data.guestName) {
+                    const rect = body.getBoundingClientRect();
+                    const dropY = e.clientY - rect.top;
+                    let clickedHour = -1;
+                    let clickedMin = 0;
+                    for (let h = START_HOUR; h < END_HOUR; h++) {
+                        const top = hourTops[h];
+                        const bottom = hourTops[h + 1] !== undefined ? hourTops[h + 1] : (top + hourRowHeights[h]);
+                        if (dropY >= top && dropY < bottom) {
+                            clickedHour = h;
+                            const height = bottom - top;
+                            const relativeY = dropY - top;
+                            if (relativeY >= height / 2) clickedMin = 30;
+                            break;
+                        }
+                    }
+                    const rId = col.roomObj ? col.roomObj.roomId : null;
+                    openModalWithGuest(rId, clickedHour, clickedMin, col.dateStr, data);
+                    return;
+                }
+            }
+            
+            // 【パターンB：既存の予約バー移動】
+            if (draggedResId) {
+                handleDropOnTimeline(e);
+            }
+        };
         
         if (nowTopPx !== -1 && col.dateNum === formatDateToNum(now)) {
             const line = document.createElement('div');
@@ -1400,6 +1456,17 @@ function openModal(res = null, defaultRoomId = null, clickHour = null, clickMin 
 
     document.getElementById('input-note').value = "";
     document.getElementById('btn-delete').style.display = 'none';
+
+    // === 新規予約モード時のみ：自分の属性を確認して自動追加するか決める ===
+    if (currentUser && currentUser.userId) {
+        // masterDataの全ユーザーリストから、自分の詳細データ（showInList）を探す
+        const myData = masterData.users.find(u => String(u.userId) === String(currentUser.userId));
+        
+        // DBeaverで show_in_list が 1 (営業など) に設定されている場合のみ自動追加
+        if (myData && (myData.showInList === 1 || myData.showInList === true)) {
+            selectedParticipantIds.add(String(currentUser.userId));
+        }
+    }
   }
   renderShuttleLists(); 
   syncTitleTags();
@@ -1410,12 +1477,15 @@ function openModal(res = null, defaultRoomId = null, clickHour = null, clickMin 
   if (modalContent) modalContent.scrollTop = 0;
 }
 
+let pendingGuestDeleteId = null; // ★追加：ドラッグした案内のIDを一時保存
+
 function closeModal() { 
     document.getElementById('bookingModal').style.display = 'none'; 
     
     // activeReportId をリセットするだけ（画面更新はしない）
     activeReportId = null; 
     pendingTitle = ""; // ★予約が終わった、またはキャンセルした時に初めてリセットする
+    pendingGuestDeleteId = null; // ★追加：リセット
 }
 
 function getParticipantIdsFromRes(res) {
@@ -1745,11 +1815,20 @@ async function saveBooking() {
         }
     }
 
-    setTimeout(() => {
+    setTimeout(async () => {  // ★ async を追加しました
         loadingEl.style.display = 'none';
         wrapper.style.display = 'none'; 
 
         if (failCount === 0) {
+            // --- 案内データからの引き継ぎだった場合、元の案内を削除 ---
+            if (pendingGuestDeleteId) {
+                await callAPI({ 
+                    action: 'deleteGuestEntry', 
+                    id: pendingGuestDeleteId 
+                }, false);
+                pendingGuestDeleteId = null;
+            }
+            
             // ▼▼▼ ここを修正：保存成功時のみ消去を実行 ▼▼▼
             if (activeReportId) {
                 // ① データベースを既読（1）にする
@@ -1886,18 +1965,27 @@ function openDetailModal(res) {
 }
 function closeDetailModal() { document.getElementById('detailModal').style.display = 'none'; }
 
-/* ==============================================
-   7. メンバー/グループ選択 (シャトル)
-   ============================================== */
+// 参加者のリストを描画するラッパー関数
+function renderShuttleLists(filterText = "") {
+    const searchId = 'shuttle-search-input'; 
+    const inputEl = document.getElementById(searchId);
+    const text = filterText || (inputEl ? inputEl.value : "");
+    
+    // ★必ず第4引数は 'list-selected' にする
+    renderGenericShuttle(text, selectedParticipantIds, 'list-candidates', 'list-selected', searchId);
+}
+
+// リストの描画本体
 function renderGenericShuttle(filterText, targetSet, candidatesContainerId, selectedContainerId, searchInputId) {
-    const rawInput = (filterText || "").trim();
+    const rawInput = (filterText || "").trim().toLowerCase();
     const searchLower = rawInput.toLowerCase();
     const searchKata = hiraToKata(rawInput);
     const searchHira = kataToHira(rawInput);
     
     const leftList = document.getElementById(candidatesContainerId);
     const rightList = document.getElementById(selectedContainerId);
-    if(!leftList || !rightList) return;
+    
+    if (!leftList || !rightList) return;
 
     leftList.innerHTML = "";
     rightList.innerHTML = "";
@@ -1905,42 +1993,45 @@ function renderGenericShuttle(filterText, targetSet, candidatesContainerId, sele
     masterData.users.forEach(u => {
         if (!u.userId) return;
         const uidStr = String(u.userId);
-        
+
         if (targetSet.has(uidStr)) {
+            // 選択済みの人（選ばれている人は非表示設定でも念のため表示しておく）
             const div = document.createElement('div');
             div.className = 'shuttle-item icon-remove';
-            div.innerText = u.userName;
+            div.innerText = u.userName; 
+            
             div.onclick = () => {
                 targetSet.delete(uidStr);
-                renderGenericShuttle(rawInput, targetSet, candidatesContainerId, selectedContainerId, searchInputId);
+                renderGenericShuttle(document.getElementById(searchInputId)?.value, targetSet, candidatesContainerId, selectedContainerId, searchInputId);
             };
             rightList.appendChild(div);
         } else {
-            // ▼▼▼ ここから追加：タブによる絞り込み処理 ▼▼▼
-            let uBranch = u.branch || 'nerima'; // branch情報がない人は「練馬」として扱う
-            // 「すべて」タブ以外が選ばれている時、所属が違う人はスキップ（表示しない）
-            if (activeBranchFilter !== 'all' && uBranch !== activeBranchFilter) {
-                return; 
-            }
+            // 候補者の人
+            let uBranch = u.branch || 'nerima';
+            if (activeBranchFilter !== 'all' && uBranch !== activeBranchFilter) return;
+
+            // ★新規追加：DBeaverで「0（非表示）」に設定されている人はリストから除外する
+            if (u.showInList === 0 || u.showInList === false) return;
+
             const name = (u.userName || "").toLowerCase();
             const kana = (u.kana || "").toLowerCase();
-
             const isMatch = (rawInput === "") || 
                             name.includes(searchLower) || 
                             kana.includes(searchLower) || 
                             kana.includes(searchKata) || 
-                            kana.includes(searchHira);
+                            kana.includes(searchHira) ||
+                            uidStr.toLowerCase().includes(searchLower);
 
             if (isMatch) {
                 const div = document.createElement('div');
                 div.className = 'shuttle-item icon-add';
-                div.innerText = u.userName;
+                div.innerText = u.userName; 
                 
                 div.onclick = () => {
                     targetSet.add(uidStr);
                     if (searchInputId) {
                         const inputEl = document.getElementById(searchInputId);
-                        if(inputEl) inputEl.value = "";
+                        if(inputEl) inputEl.value = ""; 
                     }
                     renderGenericShuttle("", targetSet, candidatesContainerId, selectedContainerId, searchInputId);
                 };
@@ -1948,12 +2039,6 @@ function renderGenericShuttle(filterText, targetSet, candidatesContainerId, sele
             }
         }
     });
-}
-
-function renderShuttleLists(filterText = "") {
-    const searchId = 'shuttle-search-input'; 
-    const text = filterText || document.getElementById(searchId).value;
-    renderGenericShuttle(text, selectedParticipantIds, 'list-candidates', 'list-selected', searchId);
 }
 
 function renderGroupCreateShuttle() {
@@ -3062,14 +3147,6 @@ async function ensurePushSubscription() {
     // 自動更新の失敗はユーザーに通知せずログのみに残す
   }
 }
-/* script.js に以下の関数を追加し、既存の関連箇所を修正 */
-
-// A. 初期化時に週間バーを描画するように変更
-// initUI() の中で updateWeeklyBar(); を呼ぶようにしてください。
-
-/* script.js の updateWeeklyBar を updateMonthlyCalendar に書き換え */
-
-// script.js 内の updateMonthlyCalendar 関数を以下に書き換え
 
 function updateMonthlyCalendar() {
     const container = document.getElementById('calendar-grid-container');
@@ -3081,28 +3158,20 @@ function updateMonthlyCalendar() {
     const year = selectedDate.getFullYear();
     const month = selectedDate.getMonth();
 
-    // 1. 年月表示の更新
     if (titleEl) {
         titleEl.innerText = `${year}年 ${month + 1}月`;
     }
 
     container.innerHTML = '';
-
-    // 2. 月の初日の曜日と最終日を取得
     const firstDay = new Date(year, month, 1).getDay(); 
     const lastDate = new Date(year, month + 1, 0).getDate();
 
-    // 3. 曜日のラベルを表示したい場合はここに追加（オプション）
-    // 今回は画像に合わせて数字のみのグリッドにします
-
-    // 4. 初日の前の空白埋め
     for (let i = 0; i < firstDay; i++) {
         const emptyDiv = document.createElement('div');
         emptyDiv.className = 'day-item other-month';
         container.appendChild(emptyDiv);
     }
 
-    // 5. 日付ボタンの生成
     for (let d = 1; d <= lastDate; d++) {
         const current = new Date(year, month, d);
         const dayItem = document.createElement('div');
@@ -3120,8 +3189,13 @@ function updateMonthlyCalendar() {
             updateMonthlyCalendar();       
         };
 
-        dayItem.innerText = d; // 余計なspanタグを使わず直接数字を入れる
+        dayItem.innerText = d;
         container.appendChild(dayItem);
+    }
+
+    // ▼▼▼ 修正：カレンダーが更新（日付変更）されたら、サイドバーも強制同期する ▼▼▼
+    if (typeof syncGuestListFromMaster === 'function') {
+        syncGuestListFromMaster();
     }
 }
 
@@ -3138,22 +3212,33 @@ function shiftMonth(dir) {
     
     renderVerticalTimeline('map');
     updateMonthlyCalendar();
+    
+    // ★追加：サイドバーを同期
+    if (typeof syncGuestListFromMaster === 'function') syncGuestListFromMaster();
 }
 
-/* 初期化時にも実行するように initUI 内の関数名を変更してください */
-// initUI() の中で updateMonthlyCalendar(); を呼ぶように修正
 function shiftCalendar(dir) {
     const input = document.getElementById('map-date');
     const d = new Date(input.value);
     
-    // 表示モードが「週」なら7日、それ以外なら1日移動
-    const amount = (typeof currentViewMode !== 'undefined' && currentViewMode === 'week') ? 7 : 1;
-    d.setDate(d.getDate() + (dir * amount));
+    if (currentViewMode === 'day') {
+        d.setDate(d.getDate() + dir); 
+    } else if (currentViewMode === 'week') {
+        d.setDate(d.getDate() + (dir * 7)); 
+    } else if (currentViewMode === 'month') {
+        d.setMonth(d.getMonth() + dir);
+    }
     
-    input.value = `${d.getFullYear()}-${('0' + (d.getMonth() + 1)).slice(-2)}-${('0' + d.getDate()).slice(-2)}`;
+    const y = d.getFullYear();
+    const m = ('0' + (d.getMonth() + 1)).slice(-2);
+    const day = ('0' + d.getDate()).slice(-2);
+    input.value = `${y}-${m}-${day}`;
     
     renderVerticalTimeline('map');
-    updateWeeklyBar();
+    updateMonthlyCalendar();
+
+    // ★追加：サイドバーを同期
+    if (typeof syncGuestListFromMaster === 'function') syncGuestListFromMaster();
 }
 /* ==============================================
    ★ カレンダー表示切替と移動の処理
@@ -4378,25 +4463,36 @@ async function handleDropOnTimeline(e) {
     await execDragAndDropUpdate(draggedResId, roomId, dateStr, droppedHour, droppedMin);
 }
 
-// マトリックス（週・月表示）でのドロップ処理：時間は元のまま日付と部屋だけ移動
+// マトリックス（週・月表示）でのドロップ処理
 async function handleDropOnMatrix(e) {
     e.preventDefault();
-    if (!draggedResId) return;
+    
+    // 案内データがある場合
+    const jsonData = e.dataTransfer.getData('application/json');
+    if (jsonData) {
+        const data = JSON.parse(jsonData);
+        if (data.name || data.guestName) {
+            const targetSlot = e.target.closest('.matrix-room-slot');
+            if (!targetSlot) return;
+            const roomId = targetSlot.dataset.roomId;
+            const dateStr = targetSlot.dataset.dateStr;
+            // 週/月表示ではデフォルト 9:00 で開く
+            openModalWithGuest(roomId, 9, 0, dateStr, data);
+            return;
+        }
+    }
 
+    // 既存予約の移動の場合
+    if (!draggedResId) return;
     const targetSlot = e.target.closest('.matrix-room-slot');
     if (!targetSlot) return;
-
     const roomId = targetSlot.dataset.roomId;
     const dateStr = targetSlot.dataset.dateStr;
-
-    // 元の予約の時間をそのまま引き継ぐ
     const res = masterData.reservations.find(r => r.id === draggedResId);
     if (!res) return;
     const oldStart = new Date(res._startTime || res.startTime);
-    
     await execDragAndDropUpdate(draggedResId, roomId, dateStr, oldStart.getHours(), oldStart.getMinutes());
 }
-
 // 共通：更新APIの実行
 async function execDragAndDropUpdate(resId, newRoomId, newDateStr, newHour, newMin) {
     const res = masterData.reservations.find(r => r.id === resId);
@@ -4474,11 +4570,10 @@ async function execDragAndDropUpdate(resId, newRoomId, newDateStr, newHour, newM
         document.getElementById('loading').style.display = 'none';
     }
 }
-// ★追加: 拠点タブを切り替える関数
-function setBranchFilter(branch, btnElement) {
+// ★修正: 拠点タブを切り替える関数（待ち案内にも対応）
+function setBranchFilter(branch, btnElement, target = 'booking') {
     activeBranchFilter = branch;
     
-    // ▼▼▼ 修正：クリックされたボタンと同じコンテナ内のタブだけを対象にする ▼▼▼
     const container = btnElement.closest('.branch-tabs-container');
     if (container) {
         const tabs = container.querySelectorAll('.branch-tab');
@@ -4486,8 +4581,12 @@ function setBranchFilter(branch, btnElement) {
     }
     btnElement.classList.add('active');
     
-    // リストを再描画
-    renderShuttleLists(); 
+    // 引数で「guest」と指定されたら案内用を更新、それ以外は予約用を更新
+    if (target === 'guest') {
+        if (typeof renderGuestShuttle === 'function') renderGuestShuttle();
+    } else {
+        renderShuttleLists(); 
+    }
 }
 /* ==============================================
    追加：予約内容をコピーして新規作成する処理
@@ -4756,5 +4855,363 @@ async function saveNewTagWithColor() {
     } catch(e) {
         document.getElementById('loading').style.display = 'none';
         alert("通信エラーが発生しました");
+    }
+}
+
+/* ==============================================
+   追加：待ち案内・迎え案内のサイドパネル処理・入力機能
+   ============================================== */
+let currentSidebarMode = null; 
+let guestList = { waiting: [], pickup: [] }; // 登録した案内のデータ保存用
+
+function toggleSidebar(mode) {
+    const sidebar = document.getElementById('timeline-sidebar');
+    const title = document.getElementById('sidebar-title');
+    const btnWaiting = document.getElementById('btn-toggle-waiting');
+    const btnPickup = document.getElementById('btn-toggle-pickup');
+
+    if (currentSidebarMode === mode) {
+        closeSidebar();
+        return;
+    }
+
+    currentSidebarMode = mode;
+    sidebar.style.display = 'flex';
+    btnWaiting.classList.remove('active');
+    btnPickup.classList.remove('active');
+
+    if (mode === 'waiting') {
+        title.innerText = '待ち案内';
+        btnWaiting.classList.add('active');
+    } else if (mode === 'pickup') {
+        title.innerText = '迎え案内';
+        btnPickup.classList.add('active');
+    }
+
+    // ★修正：パネルを開いた瞬間に、現在の日付に合わせてデータを同期し直す
+    if (typeof syncGuestListFromMaster === 'function') {
+        syncGuestListFromMaster(); 
+    } else {
+    
+    renderSidebarList();
+    }
+}
+
+function closeSidebar() {
+    currentSidebarMode = null;
+    document.getElementById('timeline-sidebar').style.display = 'none';
+    document.getElementById('btn-toggle-waiting').classList.remove('active');
+    document.getElementById('btn-toggle-pickup').classList.remove('active');
+}
+
+function openGuestAddModal() {
+    document.getElementById('guestAddModal').style.display = 'flex';
+    document.getElementById('guest-modal-title').innerText = currentSidebarMode === 'waiting' ? '待ち案内を追加' : '迎え案内を追加';
+    document.getElementById('guest-name-input').value = '';
+    document.getElementById('guest-shuttle-search').value = '';
+    
+    // 担当営業の入力欄をリセット（属性を確認して自動入力するか決める）
+    const repInput = document.getElementById('guest-reps-input');
+    if (repInput && currentUser && currentUser.userId) {
+        // masterDataから自分の属性（showInList）を確認
+        const myData = masterData.users.find(u => String(u.userId) === String(currentUser.userId));
+        
+        // 営業担当（1）なら自分の名前をセット、受付担当（0）なら空欄にする
+        if (myData && (myData.showInList === 1 || myData.showInList === true)) {
+            repInput.value = currentUser.userName || '';
+        } else {
+            repInput.value = '';
+        }
+    } else if (repInput) {
+        repInput.value = '';
+    }
+    
+    // 時間を現在の「次の30分」に自動セット
+    const now = new Date();
+    let h = now.getHours();
+    let m = now.getMinutes() < 30 ? 0 : 30;
+    document.getElementById('guest-time-input').value = `${pad(h)}:${pad(m)}`;
+
+    initCustomTimePickers(); 
+    renderGuestShuttle();
+}
+
+function closeGuestAddModal() {
+    document.getElementById('guestAddModal').style.display = 'none';
+}
+
+// 担当営業のリストを描画（テキスト入力に追加する形式）
+function renderGuestShuttle() {
+    const searchId = 'guest-shuttle-search';
+    const inputEl = document.getElementById(searchId);
+    const rawInput = (inputEl ? inputEl.value : "").trim().toLowerCase();
+    const searchKata = hiraToKata(rawInput);
+    const searchHira = kataToHira(rawInput);
+    
+    const leftList = document.getElementById('guest-candidates');
+    if(!leftList) return;
+    leftList.innerHTML = "";
+
+    masterData.users.forEach(u => {
+        if (u.branch && u.branch !== 'nerima') return; 
+
+        // ★新規追加：DBeaverで「0（非表示）」に設定されている人はリストから除外する
+        if (u.showInList === 0 || u.showInList === false) return;
+
+        const name = (u.userName || "").toLowerCase();
+        const kana = (u.kana || "").toLowerCase();
+
+        const isMatch = (rawInput === "") || 
+                        name.includes(rawInput) || 
+                        kana.includes(rawInput) || 
+                        kana.includes(searchKata) || 
+                        kana.includes(searchHira);
+
+        if (isMatch) {
+            const div = document.createElement('div');
+            div.className = 'shuttle-item icon-add';
+            div.innerText = u.userName;
+            
+            div.onclick = () => {
+                const repInput = document.getElementById('guest-reps-input');
+                let currentText = repInput.value.trim();
+                if (currentText.length > 0) {
+                    if (!currentText.includes(u.userName)) {
+                        repInput.value = currentText + '、' + u.userName;
+                    }
+                } else {
+                    repInput.value = u.userName;
+                }
+            };
+            leftList.appendChild(div);
+        }
+    });
+}
+
+// 「追加する」ボタンを押した時の処理（API通信対応版）
+async function saveGuestEntry() {
+    const name = document.getElementById('guest-name-input').value.trim();
+    const time = document.getElementById('guest-time-input').value.trim();
+    const repNames = document.getElementById('guest-reps-input').value.trim();
+    const targetDate = document.getElementById('map-date') ? document.getElementById('map-date').value : ''; 
+    
+    if (!name || !time) {
+        alert("お客様の名前と時間を入力してください");
+        return;
+    }
+    if (!repNames) {
+        alert("担当営業名を入力または選択してください");
+        return;
+    }
+
+    document.getElementById('loading').style.display = 'flex';
+
+    // サーバー（API）に送信するデータ
+    const params = {
+        action: 'createGuestEntry',
+        type: currentSidebarMode,
+        date: targetDate,
+        time: time,
+        guestName: name,
+        repIds: "", // 自由入力になったためIDは空にします
+        repNames: repNames, 
+        operatorName: currentUser ? currentUser.userName : 'Unknown' 
+    };
+
+    try {
+        const result = await callAPI(params);
+        document.getElementById('loading').style.display = 'none';
+
+        if (result.status === 'success') {
+            closeGuestAddModal();
+            
+            const newId = result.id || generateUUID();
+            const newEntry = {
+                id: newId,
+                name: name,
+                time: time,
+                reps: repNames
+            };
+
+            if (!guestList[currentSidebarMode]) guestList[currentSidebarMode] = [];
+            guestList[currentSidebarMode].push(newEntry);
+            guestList[currentSidebarMode].sort((a, b) => a.time.localeCompare(b.time));
+            
+            renderSidebarList(); // サイドバーを再描画
+        } else {
+            alert("追加に失敗しました: " + result.message);
+        }
+    } catch (e) {
+        document.getElementById('loading').style.display = 'none';
+        alert("通信エラーが発生しました");
+    }
+}
+
+// 案内を完了（削除）する処理（API通信対応版）
+async function deleteGuestEntry(id) {
+    if (!confirm('この案内を完了（リストから削除）しますか？')) return;
+    
+    document.getElementById('loading').style.display = 'flex';
+    
+    const params = {
+        action: 'deleteGuestEntry', 
+        id: id                      
+    };
+
+    try {
+        const result = await callAPI(params);
+        document.getElementById('loading').style.display = 'none';
+
+        if (result.status === 'success') {
+            guestList[currentSidebarMode] = guestList[currentSidebarMode].filter(item => item.id !== id);
+            renderSidebarList();
+        } else {
+            alert("削除に失敗しました: " + result.message);
+        }
+    } catch(e) {
+        document.getElementById('loading').style.display = 'none';
+        alert("通信エラーが発生しました");
+    }
+}
+
+// データベースから受け取った情報をサイドバーのリストに反映させる機能
+function syncGuestListFromMaster() {
+    guestList = { waiting: [], pickup: [] }; // 一旦リセット
+    
+    // カレンダーで選択中の日付 (例: "2026-04-02")
+    const targetDate = document.getElementById('map-date') ? document.getElementById('map-date').value : '';
+
+    if (masterData && masterData.guestEntries) {
+        masterData.guestEntries.forEach(entry => {
+            // ▼▼▼ 日付の不一致を解決する修正ポイント ▼▼▼
+            let entryDateStr = "";
+            if (entry.target_date) {
+                // 文字列（またはDateオブジェクト）を日付型として読み込む
+                const d = new Date(entry.target_date);
+                // 実行環境（日本時間）の「年・月・日」を取得して連結する
+                const y = d.getFullYear();
+                const m = ('0' + (d.getMonth() + 1)).slice(-2);
+                const day = ('0' + d.getDate()).slice(-2);
+                entryDateStr = `${y}-${m}-${day}`; // 確実に "2026-04-02" 形式にする
+            }
+            
+            // カレンダーの日付とDBの日付が一致する場合のみリストに追加
+            if (entryDateStr === targetDate) {
+                const formattedEntry = {
+                    id: entry.id,
+                    name: entry.guest_name,
+                    time: entry.target_time,
+                    reps: entry.rep_names
+                };
+                
+                if (entry.entry_type === 'waiting') {
+                    guestList.waiting.push(formattedEntry);
+                } else if (entry.entry_type === 'pickup') {
+                    guestList.pickup.push(formattedEntry);
+                }
+            }
+        });
+        
+        // 時間順に並び替え
+        guestList.waiting.sort((a, b) => a.time.localeCompare(b.time));
+        guestList.pickup.sort((a, b) => a.time.localeCompare(b.time));
+    }
+    
+    // データが更新されたので、現在開いているサイドバーの表示を再描画する
+    if (currentSidebarMode) {
+        renderSidebarList();
+    }
+}
+// サイドパネルにリストを描画する（スリムな1行表示版）
+function renderSidebarList() {
+    const container = document.getElementById('sidebar-list-container');
+    if (!container || !currentSidebarMode) return;
+    
+    const list = guestList[currentSidebarMode] || [];
+    container.innerHTML = '';
+    
+    if (list.length === 0) {
+        container.innerHTML = '<p style="font-size:0.85rem; color:#666; text-align:center; margin-top:20px; margin-bottom:20px;">（現在、登録はありません）</p>';
+        return;
+    }
+
+    list.forEach(item => {
+        const shortReps = item.reps.split(/[,、]\s*/).map(fullName => {
+            return fullName.trim().split(/[\s　]+/)[0];
+        }).join(', ');
+
+        const div = document.createElement('div');
+        div.className = 'guest-slim-item';
+        div.style.borderLeft = currentSidebarMode === 'waiting' ? "4px solid #f1c40f" : "4px solid #3498db";
+        
+        // ▼▼▼ ドラッグ機能を追加 ▼▼▼
+        div.draggable = true;
+        div.style.cursor = 'grab';
+        div.ondragstart = (e) => {
+            // ドラッグ時に案内データを保存（JSON形式）
+            e.dataTransfer.setData('application/json', JSON.stringify(item));
+            div.style.opacity = '0.5';
+        };
+        div.ondragend = () => { div.style.opacity = '1'; };
+        // ▲▲▲ ここまで ▲▲▲
+
+        div.innerHTML = `
+            <div class="guest-info-row">
+                <span class="guest-name" title="${item.name}">${item.name}</span>
+                <span class="guest-time">${item.time}</span>
+                <span class="guest-rep" title="${item.reps}">${shortReps}</span>
+                <button type="button" class="guest-delete-x" onclick="deleteGuestEntry('${item.id}')" title="完了/削除">&times;</button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// ==============================================
+// 15. 案内データの引き継ぎ・削除連携 (確定版)
+// ==============================================
+
+// 案内データを引き継いで予約モーダルを開く関数
+function openModalWithGuest(resourceId, hour, minute, dateStr, guestData) {
+    // 1. まず新規予約モーダルを開く（ここでリストが一旦クリアされます）
+    openModal(null, resourceId, hour, minute, dateStr);
+
+    // 2. ドラッグ元の案内IDを記録（保存時の自動削除用）
+    pendingGuestDeleteId = guestData.id; 
+
+    // 3. お客様の名前をタイトルにセット
+    document.getElementById('input-title').value = guestData.name || guestData.guestName || "";
+
+    // 4. 備考欄を空にする
+    document.getElementById('input-note').value = "";
+
+    // 5. 【修正】担当営業を「参加予定者」に自動追加
+    const repsText = guestData.reps || "";
+    
+    // 分割ルール：カンマや読点のみで区切る（名前の中のスペースは維持する）
+    const repNames = repsText.split(/[,、]/);
+
+    repNames.forEach(name => {
+        // 入力された名前からスペースを除去して比較用にする
+        const targetSearchName = name.trim().replace(/[\s　]/g, ""); 
+        if (!targetSearchName) return;
+
+        // masterData.users から一致するユーザーを探す
+        const user = masterData.users.find(u => {
+            if (!u.userName) return false;
+            // DB側の名前から「【拠点名】」と「スペース」をすべて除去して純粋な名前だけで比較
+            const dbNameClean = u.userName.replace(/【.*?】/g, "").replace(/[\s　]/g, "");
+            return dbNameClean === targetSearchName;
+        });
+
+        if (user) {
+            // IDを追加
+            selectedParticipantIds.add(String(user.userId));
+        }
+    });
+
+    // 6. 参加予定者のチップ表示を強制的に最新にする
+    if (typeof renderShuttleLists === 'function') {
+        renderShuttleLists();
     }
 }
