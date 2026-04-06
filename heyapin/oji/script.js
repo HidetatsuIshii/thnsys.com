@@ -1116,7 +1116,7 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
                     else cssType = "meeting";
                 }
                 bar.className = `v-booking-bar type-${cssType}`;
-                if (res.isTentative) bar.classList.add('tentative-booking'); // ★追加
+                if (res.isTentative) bar.classList.add('tentative-booking');
                 bar.draggable = true;
                 bar.dataset.resId = res.id;
                 bar.addEventListener('dragstart', handleDragStart);
@@ -1132,9 +1132,7 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
                 const startTimeStr = `${start.getHours()}:${pad(start.getMinutes())}`;
                 const endTimeStr = `${end.getHours()}:${pad(end.getMinutes())}`;
                 const timeRangeStr = `${startTimeStr}-${endTimeStr}`;
-                
-                // ▼▼▼ ここから上書き ▼▼▼
-                // ▼▼▼ ここから上書き ▼▼▼
+
                 let participantsStr = "";
                 let pIdsRaw = getVal(res, ['participantIds', 'participant_ids', '参加者', 'メンバー']);
                 if (pIdsRaw) {
@@ -1144,7 +1142,6 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
                          const trimId = id.trim();
                          if(!trimId) return;
                          const u = masterData.users.find(user => String(user.userId) === trimId);
-                         // ★内線番号を復活
                          if (u) {
                              const ext = u.extension ? `(${u.extension})` : "";
                              names.push(u.userName + ext);
@@ -1162,37 +1159,23 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
                      }
                 }
 
-                // ★お客様カードの表示文字列
                 let cardStr = "";
                 if (res.customerCard) {
                     const cardColor = res.customerCard === "有り" ? "#2980b9" : "#7f8c8d";
                     cardStr = `<div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-top:2px; color:${cardColor}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">カード${res.customerCard}</div>`;
                 }
 
-                const bar = document.createElement('div');
-                let cssType = room.type || 'meeting';
-                if (!room.type && room.roomName.indexOf("応接室") !== -1) cssType = "reception";
-                bar.className = `v-booking-bar type-${cssType} matrix-booking-bar`;
-                if (res.isTentative) bar.classList.add('tentative-booking');
-                bar.draggable = true;
-                bar.dataset.resId = res.id;
-                bar.addEventListener('dragstart', handleDragStart);
-                bar.addEventListener('dragend', handleDragEnd);
-                
-                // 定型文タグの色を反映（週・月表示共通）
-                if (typeof applyCustomTagColor === 'function') applyCustomTagColor(bar, title);
+                if (typeof applyCustomTagColor === 'function') applyCustomTagColor(bar, displayTitle);
 
-                // ★表示順序を「名前 → カード」に修正
                 bar.innerHTML = `
-                      <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tStr}</div>
-                      <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
+                      <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${timeRangeStr}</div>
+                      <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayTitle}</div>
                       <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${participantsStr}</div>
                       ${cardStr}
-                `;
-                // ▲▲▲ ここまで上書き ▲▲▲
+                  `;
               
                 bar.onclick = (e) => {
-                    if (!isTouch && hasDragged) return;
+                    if (typeof isTouch !== 'undefined' && !isTouch && typeof hasDragged !== 'undefined' && hasDragged) return;
                     e.stopPropagation();
                     openDetailModal(res);
                 };
@@ -3524,8 +3507,6 @@ function renderMatrixWeekTimeline(mode, shouldScroll) {
                 const tStr = `${pad(start.getHours())}:${pad(start.getMinutes())}-${pad(end.getHours())}:${pad(end.getMinutes())}`;
                 const title = getVal(res, ['title', 'subject', '件名', 'タイトル']) || '予約';
 
-                // ▼▼▼ ① ここから追加：参加者の名前を取得する処理 ▼▼▼
-                // ▼▼▼ ここから上書き ▼▼▼
                 let participantsStr = "";
                 let pIdsRaw = getVal(res, ['participantIds', 'participant_ids', '参加者', 'メンバー']);
                 if (pIdsRaw) {
@@ -3535,7 +3516,6 @@ function renderMatrixWeekTimeline(mode, shouldScroll) {
                          const trimId = id.trim();
                          if(!trimId) return;
                          const u = masterData.users.find(user => String(user.userId) === trimId);
-                         // ★内線番号を復活
                          if (u) {
                              const ext = u.extension ? `(${u.extension})` : "";
                              names.push(u.userName + ext);
@@ -3553,7 +3533,6 @@ function renderMatrixWeekTimeline(mode, shouldScroll) {
                      }
                 }
 
-                // ★お客様カードの表示文字列
                 let cardStr = "";
                 if (res.customerCard) {
                     const cardColor = res.customerCard === "有り" ? "#2980b9" : "#7f8c8d";
@@ -3570,18 +3549,19 @@ function renderMatrixWeekTimeline(mode, shouldScroll) {
                 bar.addEventListener('dragstart', handleDragStart);
                 bar.addEventListener('dragend', handleDragEnd);
                 
-                // 定型文タグの色を反映（週・月表示共通）
                 if (typeof applyCustomTagColor === 'function') applyCustomTagColor(bar, title);
 
-                // ★表示順序を「名前 → カード」に修正
                 bar.innerHTML = `
                       <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tStr}</div>
                       <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
                       <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${participantsStr}</div>
                       ${cardStr}
                 `;
-                // ▲▲▲ ここまで上書き ▲▲▲
-                bar.onclick = (e) => { e.stopPropagation(); openDetailModal(res); };
+                bar.onclick = (e) => { 
+                    if (typeof isTouch !== 'undefined' && !isTouch && typeof hasDragged !== 'undefined' && hasDragged) return; 
+                    e.stopPropagation(); 
+                    openDetailModal(res); 
+                };
                 slot.appendChild(bar);
             });
             colDiv.appendChild(slot);
@@ -3889,7 +3869,6 @@ function renderMatrixMonthTimeline(mode, shouldScroll) {
                     const tStr = `${pad(start.getHours())}:${pad(start.getMinutes())}-${pad(end.getHours())}:${pad(end.getMinutes())}`;
                     const title = getVal(res, ['title', 'subject', '件名', 'タイトル']) || '予約';
 
-                    // ▼▼▼ ① ここから追加：参加者の名前を取得する処理 ▼▼▼
                     let participantsStr = "";
                     let pIdsRaw = getVal(res, ['participantIds', 'participant_ids', '参加者', 'メンバー']);
                     if (pIdsRaw) {
@@ -3899,7 +3878,12 @@ function renderMatrixMonthTimeline(mode, shouldScroll) {
                              const trimId = id.trim();
                              if(!trimId) return;
                              const u = masterData.users.find(user => String(user.userId) === trimId);
-                             names.push(u ? u.userName : trimId);
+                             if (u) {
+                                 const ext = u.extension ? `(${u.extension})` : "";
+                                 names.push(u.userName + ext);
+                             } else {
+                                 names.push(trimId);
+                             }
                          });
                          if (names.length > 0) {
                              if (names.length <= 4) participantsStr = names.join(', ');
@@ -3911,34 +3895,32 @@ function renderMatrixMonthTimeline(mode, shouldScroll) {
                          }
                     }
 
+                    let cardStr = "";
+                    if (res.customerCard) {
+                        const cardColor = res.customerCard === "有り" ? "#2980b9" : "#7f8c8d";
+                        cardStr = `<div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-top:2px; color:${cardColor}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">カード${res.customerCard}</div>`;
+                    }
+
                     const bar = document.createElement('div');
                     let cssType = room.type || 'meeting';
                     if (!room.type && room.roomName.indexOf("応接室") !== -1) cssType = "reception";
                     bar.className = `v-booking-bar type-${cssType} matrix-booking-bar`;
-                    if (res.isTentative) bar.classList.add('tentative-booking'); // ★追加
+                    if (res.isTentative) bar.classList.add('tentative-booking');
                     bar.draggable = true;
                     bar.dataset.resId = res.id;
                     bar.addEventListener('dragstart', handleDragStart);
                     bar.addEventListener('dragend', handleDragEnd);
                     
-                    applyCustomTagColor(bar, title);
+                    if (typeof applyCustomTagColor === 'function') applyCustomTagColor(bar, title);
 
-                    // (participantsStr の生成処理の直後に追加)
-                let cardStr = "";
-                if (res.customerCard) {
-                    const cardColor = res.customerCard === "有り" ? "#2980b9" : "#7f8c8d";
-                    cardStr = `<div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-top:2px; color:${cardColor}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">カード${res.customerCard}</div>`;
-                }
-
-                // ★ ${cardStr} を間に挟む
-                bar.innerHTML = `
-                      <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${timeRangeStr || tStr}</div>
-                      <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayTitle || title}</div>
-                      ${cardStr}
-                      <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${participantsStr}</div>
-                  `;
+                    bar.innerHTML = `
+                          <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tStr}</div>
+                          <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
+                          <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${participantsStr}</div>
+                          ${cardStr}
+                    `;
                     bar.onclick = (e) => { 
-                        if (!isTouch && hasDragged) return; 
+                        if (typeof isTouch !== 'undefined' && !isTouch && typeof hasDragged !== 'undefined' && hasDragged) return; 
                         e.stopPropagation(); 
                         openDetailModal(res); 
                     };
