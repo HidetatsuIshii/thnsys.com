@@ -2,7 +2,6 @@
    1. 定数定義 & 設定
    ============================================== */
 const API_URL = "https://z54wdwfu0k.execute-api.ap-northeast-1.amazonaws.com";
-// --- ★修正：拠点名をURLから取得 (oji または nerima) ---
 const CURRENT_BRANCH = window.location.pathname.split('/').filter(p => p && p !== 'heyapin')[0] || 'default';
 
 // --- ★修正：キー名に拠点名を付与するように変更 ---
@@ -5155,6 +5154,23 @@ function renderSidebarList() {
         div.ondragend = () => { div.style.opacity = '1'; };
         // ▲▲▲ ここまで ▲▲▲
 
+        // ▼▼▼ ドラッグ機能 ▼▼▼
+        div.draggable = true;
+        div.style.cursor = 'grab';
+        div.ondragstart = (e) => {
+            e.dataTransfer.setData('application/json', JSON.stringify(item));
+            div.style.opacity = '0.5';
+        };
+        div.ondragend = () => { div.style.opacity = '1'; };
+
+        // ▼▼▼ 追加：クリックで編集モードを開く ▼▼▼
+        div.onclick = (e) => {
+            // 「×（削除）」ボタンが押された時は編集画面を開かないようにする
+            if (e.target.closest('.guest-delete-x')) return;
+            openGuestEditModal(item);
+        };
+        // ▲▲▲ 追加ここまで ▲▲▲
+
         div.innerHTML = `
             <div class="guest-info-row">
                 <span class="guest-name" title="${item.name}">${item.name}</span>
@@ -5214,4 +5230,96 @@ function openModalWithGuest(resourceId, hour, minute, dateStr, guestData) {
     if (typeof renderShuttleLists === 'function') {
         renderShuttleLists();
     }
+}
+// ==============================================
+// 16. 案内データの編集（修正）機能
+// ==============================================
+let editingGuestItem = null;
+
+// 編集用のモーダルを開く
+function openGuestEditModal(item) {
+    editingGuestItem = item;
+    
+    // タイトルを「案内を編集」に変更
+    const titleEl = document.getElementById('guest-modal-title');
+    if (titleEl) titleEl.innerText = '案内を編集';
+    
+    // 既存のデータを入力欄にセットする
+    document.getElementById('guest-name-input').value = item.name || '';
+    document.getElementById('guest-time-input').value = item.time || '';
+    const repInput = document.getElementById('guest-reps-input');
+    if (repInput) repInput.value = item.reps || '';
+    
+    // モーダルを表示
+    document.getElementById('guest-modal').style.display = 'flex';
+
+    // --- 既存の「追加」ボタンを隠し、専用の「更新する」ボタンを配置する ---
+    const modalContent = document.querySelector('#guest-modal .modal-content');
+    
+    const oldUpdateBtn = document.getElementById('guest-update-btn');
+    if (oldUpdateBtn) oldUpdateBtn.remove();
+
+    const addBtn = modalContent.querySelector('button.btn-primary');
+    if (addBtn) addBtn.style.display = 'none';
+
+    const updateBtn = document.createElement('button');
+    updateBtn.id = 'guest-update-btn';
+    updateBtn.className = 'btn-primary';
+    updateBtn.innerText = '更新する';
+    updateBtn.style.width = '100%';
+    updateBtn.style.marginTop = '15px';
+    
+    // 更新ボタンが押された時の処理
+    updateBtn.onclick = async () => {
+        const newName = document.getElementById('guest-name-input').value.trim();
+        const newTime = document.getElementById('guest-time-input').value.trim();
+        const newReps = document.getElementById('guest-reps-input').value.trim();
+        
+        if (!newName || !newTime) {
+            alert('お客様の名前と時間を入力してください');
+            return;
+        }
+
+        updateBtn.innerText = '更新中...';
+        updateBtn.disabled = true;
+
+        // ① 古いデータを削除
+        await callAPI({ action: 'deleteGuestEntry', id: editingGuestItem.id }, false);
+        
+        // ② 新しい内容で追加し直す
+        await callAPI({
+            action: 'createGuestEntry',
+            type: currentSiSdebarMode, 
+            date: document.getElementById('map-date').value,
+            time: newTime,
+            guestName: newName,
+            repIds: "", 
+            repNames: newReps,
+            operatorName: currentUser ? currentUser.userName : 'Unknown'
+        });
+
+        // 閉じて画面をリフレッシュ
+        closeGuestAddModal();
+        if (typeof syncGuestListFromMaster === 'function') syncGuestListFromMaster();
+    };
+    
+    modalContent.appendChild(updateBtn);
+}
+
+// 閉じる処理を拡張して、表示を「新規追加」用に戻す
+if (typeof closeGuestAddModal === 'function') {
+    const originalCloseGuestAddModal = closeGuestAddModal;
+    closeGuestAddModal = function() {
+        originalCloseGuestAddModal(); 
+        editingGuestItem = null;
+        
+        const titleEl = document.getElementById('guest-modal-title');
+        if (titleEl) titleEl.innerText = '案内を追加';
+        
+        const addBtn = document.querySelector('#guest-modal .modal-content button.btn-primary:not(#guest-update-btn)');
+        if (addBtn) addBtn.style.display = 'block';
+        
+        const updateBtn = document.getElementById('guest-update-btn');
+        if (updateBtn) updateBtn.remove();
+    };
 }
