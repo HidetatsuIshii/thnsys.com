@@ -1142,12 +1142,7 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
                          const trimId = id.trim();
                          if(!trimId) return;
                          const u = masterData.users.find(user => String(user.userId) === trimId);
-                           if (u) {
-                               const ext = u.extension ? `(${u.extension})` : "";
-                               names.push(u.userName + ext);
-                           } else {
-                               names.push(trimId);
-                           }
+                         names.push(u ? u.userName : trimId);
                      });
                      if (names.length > 0) {
                          if (names.length <= 4) participantsStr = names.join(', ');
@@ -1161,9 +1156,18 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
 
                 applyCustomTagColor(bar, displayTitle);
 
+                // (participantsStr の生成処理の直後に追加)
+                let cardStr = "";
+                if (res.customerCard) {
+                    const cardColor = res.customerCard === "有り" ? "#2980b9" : "#7f8c8d";
+                    cardStr = `<div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-top:2px; color:${cardColor}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">カード${res.customerCard}</div>`;
+                }
+
+                // ★ ${cardStr} を間に挟む
                 bar.innerHTML = `
-                      <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${timeRangeStr}</div>
-                      <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayTitle}</div>
+                      <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${timeRangeStr || tStr}</div>
+                      <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayTitle || title}</div>
+                      ${cardStr}
                       <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${participantsStr}</div>
                   `;
 
@@ -1306,6 +1310,7 @@ function openModal(res = null, defaultRoomId = null, clickHour = null, clickMin 
   selectedParticipantIds.clear();
   originalParticipantIds.clear(); 
   document.getElementById('shuttle-search-input').value = "";
+  document.querySelectorAll('input[name="input-customer-card"]').forEach(r => r.checked = false);
 
   if(document.getElementById('check-tentative')) {
       document.getElementById('check-tentative').checked = res ? !!res.isTentative : false;
@@ -1404,7 +1409,10 @@ function openModal(res = null, defaultRoomId = null, clickHour = null, clickMin 
     
     document.getElementById('input-title').value = getVal(res, ['title', 'subject', '件名', 'タイトル', '用件', 'name']);
     document.getElementById('input-note').value = getVal(res, ['note', 'description', '備考', 'メモ', '詳細', 'body']);
-    
+    if (res.customerCard) {
+        const radio = document.querySelector(`input[name="input-customer-card"][value="${res.customerCard}"]`);
+        if (radio) radio.checked = true;
+    }
     const pIds = getVal(res, ['participantIds', 'participant_ids', '参加者', 'メンバー']);
     if (pIds) {
         let idList = [];
@@ -1529,6 +1537,8 @@ async function saveBooking() {
     const end = document.getElementById('input-end').value;
     const title = document.getElementById('input-title').value;
     const note = document.getElementById('input-note').value;
+    const cardRadio = document.querySelector('input[name="input-customer-card"]:checked');
+    const customerCardVal = cardRadio ? cardRadio.value : "";
     
     // --- 入力値バリデーション ---
     const timePattern = /^([0-9]{1,2}):([0-9]{2})$/;
@@ -1799,6 +1809,7 @@ async function saveBooking() {
             participantIds: pIds, 
             title: title,
             note: note,
+            customerCard: customerCardVal, // ★追加
             isTentative: isTentativeChecked // ★追加：仮予約フラグを送信
         };
 
@@ -1933,11 +1944,7 @@ function openDetailModal(res) {
               const uIdStr = String(user.userId).trim();
               return uIdStr === id || (!isNaN(uIdStr) && !isNaN(id) && Number(uIdStr) === Number(id));
           });
-          if (u) {
-              const ext = u.extension ? ` (内線:${u.extension})` : "";
-              return u.userName + ext;
-          }
-          return id;
+          return u ? u.userName : id;
       }).filter(n => n !== "");
 
       if(names.length > 0) {
@@ -3507,12 +3514,7 @@ function renderMatrixWeekTimeline(mode, shouldScroll) {
                          const trimId = id.trim();
                          if(!trimId) return;
                          const u = masterData.users.find(user => String(user.userId) === trimId);
-                           if (u) {
-                               const ext = u.extension ? `(${u.extension})` : "";
-                               names.push(u.userName + ext);
-                           } else {
-                               names.push(trimId);
-                           }
+                         names.push(u ? u.userName : trimId);
                      });
                      if (names.length > 0) {
                          if (names.length <= 4) participantsStr = names.join(', ');
@@ -3534,11 +3536,20 @@ function renderMatrixWeekTimeline(mode, shouldScroll) {
                 bar.addEventListener('dragstart', handleDragStart);
                 bar.addEventListener('dragend', handleDragEnd);
                 
+                // (participantsStr の生成処理の直後に追加)
+                let cardStr = "";
+                if (res.customerCard) {
+                    const cardColor = res.customerCard === "有り" ? "#2980b9" : "#7f8c8d";
+                    cardStr = `<div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-top:2px; color:${cardColor}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">カード${res.customerCard}</div>`;
+                }
+
+                // ★ ${cardStr} を間に挟む
                 bar.innerHTML = `
-                      <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tStr}</div>
-                      <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
+                      <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${timeRangeStr || tStr}</div>
+                      <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayTitle || title}</div>
+                      ${cardStr}
                       <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${participantsStr}</div>
-                `;
+                  `;
                 bar.onclick = (e) => { e.stopPropagation(); openDetailModal(res); };
                 slot.appendChild(bar);
             });
@@ -3857,12 +3868,7 @@ function renderMatrixMonthTimeline(mode, shouldScroll) {
                              const trimId = id.trim();
                              if(!trimId) return;
                              const u = masterData.users.find(user => String(user.userId) === trimId);
-                              if (u) {
-                                  const ext = u.extension ? `(${u.extension})` : "";
-                                  names.push(u.userName + ext);
-                              } else {
-                                  names.push(trimId);
-                              }
+                             names.push(u ? u.userName : trimId);
                          });
                          if (names.length > 0) {
                              if (names.length <= 4) participantsStr = names.join(', ');
@@ -3886,11 +3892,20 @@ function renderMatrixMonthTimeline(mode, shouldScroll) {
                     
                     applyCustomTagColor(bar, title);
 
-                    bar.innerHTML = `
-                          <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tStr}</div>
-                          <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
-                          <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${participantsStr}</div>
-                    `;
+                    // (participantsStr の生成処理の直後に追加)
+                let cardStr = "";
+                if (res.customerCard) {
+                    const cardColor = res.customerCard === "有り" ? "#2980b9" : "#7f8c8d";
+                    cardStr = `<div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-top:2px; color:${cardColor}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">カード${res.customerCard}</div>`;
+                }
+
+                // ★ ${cardStr} を間に挟む
+                bar.innerHTML = `
+                      <div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${timeRangeStr || tStr}</div>
+                      <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayTitle || title}</div>
+                      ${cardStr}
+                      <div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${participantsStr}</div>
+                  `;
                     bar.onclick = (e) => { 
                         if (!isTouch && hasDragged) return; 
                         e.stopPropagation(); 
@@ -4633,7 +4648,11 @@ function openCopyBookingModal() {
     document.getElementById('input-end').value = `${pad(endObj.getHours())}:${pad(endObj.getMinutes())}`;
     document.getElementById('input-title').value = getVal(res, ['title', 'subject', '件名', 'タイトル']) || "";
     document.getElementById('input-note').value = getVal(res, ['note', 'description', '備考', 'メモ']) || "";
-
+    // ★ここに追加
+    if (res.customerCard) {
+        const radio = document.querySelector(`input[name="input-customer-card"][value="${res.customerCard}"]`);
+        if (radio) radio.checked = true;
+    }
     // 5. 参加者をコピーする
     selectedParticipantIds.clear();
     originalParticipantIds.clear();
