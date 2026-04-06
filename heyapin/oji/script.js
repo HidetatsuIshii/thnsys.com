@@ -1161,8 +1161,8 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
 
                 let cardStr = "";
                 if (res.customerCard) {
-                    const cardColor = res.customerCard === "有り" ? "#2980b9" : "#7f8c8d";
-                    cardStr = `<div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-top:2px; color:${cardColor}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">カード${res.customerCard}</div>`;
+                    // 色指定(color)を削除し、文字サイズを上の名前と同じ(0.9em)に統一
+                    cardStr = `<div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">カード${res.customerCard}</div>`;
                 }
 
                 if (typeof applyCustomTagColor === 'function') applyCustomTagColor(bar, displayTitle);
@@ -3535,8 +3535,8 @@ function renderMatrixWeekTimeline(mode, shouldScroll) {
 
                 let cardStr = "";
                 if (res.customerCard) {
-                    const cardColor = res.customerCard === "有り" ? "#2980b9" : "#7f8c8d";
-                    cardStr = `<div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-top:2px; color:${cardColor}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">カード${res.customerCard}</div>`;
+                    // 色指定(color)を削除し、文字サイズを上の名前と同じ(0.9em)に統一
+                    cardStr = `<div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">カード${res.customerCard}</div>`;
                 }
 
                 const bar = document.createElement('div');
@@ -3896,10 +3896,10 @@ function renderMatrixMonthTimeline(mode, shouldScroll) {
                     }
 
                     let cardStr = "";
-                    if (res.customerCard) {
-                        const cardColor = res.customerCard === "有り" ? "#2980b9" : "#7f8c8d";
-                        cardStr = `<div style="width:100%; font-weight:bold; font-size:0.85em; line-height:1.1; margin-top:2px; color:${cardColor}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">カード${res.customerCard}</div>`;
-                    }
+                if (res.customerCard) {
+                    // 色指定(color)を削除し、文字サイズを上の名前と同じ(0.9em)に統一
+                    cardStr = `<div style="width:100%; font-weight:bold; font-size:0.9em; line-height:1.1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">カード${res.customerCard}</div>`;
+                }
 
                     const bar = document.createElement('div');
                     let cssType = room.type || 'meeting';
