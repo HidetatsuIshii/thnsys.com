@@ -292,6 +292,19 @@
 
    <div class="title-tags-container" id="title-tags-area"></div>
 
+   <div style="margin-top: 10px; margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px; border: 1px solid #e0e0e0;">
+       <label style="margin-bottom: 5px; display: block; font-weight: bold; font-size: 0.9rem; color: #333;">お客様カード</label>
+       <div style="display: flex; gap: 15px; align-items: center;">
+           <label style="cursor: pointer; display: flex; align-items: center; gap: 5px; margin: 0; color: #333; font-size: 0.95rem;">
+               <input type="radio" name="input-customer-card" value="有り" style="width: 18px !important; height: 18px !important; margin: 0 !important; cursor: pointer;"> 有り
+           </label>
+           <label style="cursor: pointer; display: flex; align-items: center; gap: 5px; margin: 0; color: #333; font-size: 0.95rem;">
+               <input type="radio" name="input-customer-card" value="無し" style="width: 18px !important; height: 18px !important; margin: 0 !important; cursor: pointer;"> 無し
+           </label>
+           <button type="button" onclick="document.querySelectorAll('input[name=\'input-customer-card\']').forEach(r => r.checked = false);" style="margin-left: auto; padding: 4px 10px; font-size: 0.8rem; border: 1px solid #ccc; background: #fff; border-radius: 4px; cursor: pointer; color: #555;">未選択にする</button>
+       </div>
+   </div>
+
    <div id="edit-series-option" style="display:none; background:#e8f5e9; padding:10px; border-radius:6px; margin: 10px 0; border:1px solid #c8e6c9;">
         
         <div id="series-rule-display" style="font-weight:bold; color:#2c3e50; margin-bottom:8px; font-size:0.9rem; padding-bottom:5px; border-bottom:1px dashed #a5d6a7;">
@@ -578,6 +591,6 @@
   </div>
 </div>
 
-<script src="script.js?v=fix74"></script>
+<script src="script.js?v=fix72"></script>
 </body>
 </html>
