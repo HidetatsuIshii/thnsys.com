@@ -1142,7 +1142,12 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
                          const trimId = id.trim();
                          if(!trimId) return;
                          const u = masterData.users.find(user => String(user.userId) === trimId);
-                         names.push(u ? u.userName : trimId);
+                           if (u) {
+                               const ext = u.extension ? `(${u.extension})` : "";
+                               names.push(u.userName + ext);
+                           } else {
+                               names.push(trimId);
+                           }
                      });
                      if (names.length > 0) {
                          if (names.length <= 4) participantsStr = names.join(', ');
@@ -3498,7 +3503,12 @@ function renderMatrixWeekTimeline(mode, shouldScroll) {
                          const trimId = id.trim();
                          if(!trimId) return;
                          const u = masterData.users.find(user => String(user.userId) === trimId);
-                         names.push(u ? u.userName : trimId);
+                           if (u) {
+                               const ext = u.extension ? `(${u.extension})` : "";
+                               names.push(u.userName + ext);
+                           } else {
+                               names.push(trimId);
+                           }
                      });
                      if (names.length > 0) {
                          if (names.length <= 4) participantsStr = names.join(', ');
@@ -3843,7 +3853,12 @@ function renderMatrixMonthTimeline(mode, shouldScroll) {
                              const trimId = id.trim();
                              if(!trimId) return;
                              const u = masterData.users.find(user => String(user.userId) === trimId);
-                             names.push(u ? u.userName : trimId);
+                              if (u) {
+                                  const ext = u.extension ? `(${u.extension})` : "";
+                                  names.push(u.userName + ext);
+                              } else {
+                                  names.push(trimId);
+                              }
                          });
                          if (names.length > 0) {
                              if (names.length <= 4) participantsStr = names.join(', ');
