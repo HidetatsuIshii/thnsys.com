@@ -5250,11 +5250,11 @@ function openGuestEditModal(item) {
     const repInput = document.getElementById('guest-reps-input');
     if (repInput) repInput.value = item.reps || '';
     
-    // モーダルを表示
-    document.getElementById('guest-modal').style.display = 'flex';
+    // ★修正1：正しいモーダルのIDを指定して表示
+    document.getElementById('guestAddModal').style.display = 'flex';
 
     // --- 既存の「追加」ボタンを隠し、専用の「更新する」ボタンを配置する ---
-    const modalContent = document.querySelector('#guest-modal .modal-content');
+    const modalContent = document.querySelector('#guestAddModal .modal-content');
     
     const oldUpdateBtn = document.getElementById('guest-update-btn');
     if (oldUpdateBtn) oldUpdateBtn.remove();
@@ -5289,7 +5289,7 @@ function openGuestEditModal(item) {
         // ② 新しい内容で追加し直す
         await callAPI({
             action: 'createGuestEntry',
-            type: currentSiSdebarMode, 
+            type: currentSidebarMode, // ★修正2：スペルミスを修正
             date: document.getElementById('map-date').value,
             time: newTime,
             guestName: newName,
@@ -5300,7 +5300,9 @@ function openGuestEditModal(item) {
 
         // 閉じて画面をリフレッシュ
         closeGuestAddModal();
-        if (typeof syncGuestListFromMaster === 'function') syncGuestListFromMaster();
+        
+        // ★修正3：サーバーから最新データを取得して確実に入れ替える
+        loadAllData(true); 
     };
     
     modalContent.appendChild(updateBtn);
@@ -5316,7 +5318,7 @@ if (typeof closeGuestAddModal === 'function') {
         const titleEl = document.getElementById('guest-modal-title');
         if (titleEl) titleEl.innerText = '案内を追加';
         
-        const addBtn = document.querySelector('#guest-modal .modal-content button.btn-primary:not(#guest-update-btn)');
+        const addBtn = document.querySelector('#guestAddModal .modal-content button.btn-primary:not(#guest-update-btn)');
         if (addBtn) addBtn.style.display = 'block';
         
         const updateBtn = document.getElementById('guest-update-btn');
