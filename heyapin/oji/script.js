@@ -1933,7 +1933,11 @@ function openDetailModal(res) {
               const uIdStr = String(user.userId).trim();
               return uIdStr === id || (!isNaN(uIdStr) && !isNaN(id) && Number(uIdStr) === Number(id));
           });
-          return u ? u.userName : id;
+          if (u) {
+              const ext = u.extension ? ` (内線:${u.extension})` : "";
+              return u.userName + ext;
+          }
+          return id;
       }).filter(n => n !== "");
 
       if(names.length > 0) {
