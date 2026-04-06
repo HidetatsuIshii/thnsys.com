@@ -1140,7 +1140,12 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
                          const trimId = id.trim();
                          if(!trimId) return;
                          const u = masterData.users.find(user => String(user.userId) === trimId);
-                         names.push(u ? u.userName : trimId);
+                           if (u) {
+                               const ext = u.extension ? `(${u.extension})` : "";
+                               names.push(u.userName + ext);
+                           } else {
+                               names.push(trimId);
+                           }
                      });
                      if (names.length > 0) {
                          if (names.length <= 4) participantsStr = names.join(', ');
@@ -1928,7 +1933,11 @@ function openDetailModal(res) {
               const uIdStr = String(user.userId).trim();
               return uIdStr === id || (!isNaN(uIdStr) && !isNaN(id) && Number(uIdStr) === Number(id));
           });
-          return u ? u.userName : id;
+          if (u) {
+              const ext = u.extension ? ` (内線:${u.extension})` : "";
+              return u.userName + ext;
+          }
+          return id;
       }).filter(n => n !== "");
 
       if(names.length > 0) {
@@ -3498,7 +3507,12 @@ function renderMatrixWeekTimeline(mode, shouldScroll) {
                          const trimId = id.trim();
                          if(!trimId) return;
                          const u = masterData.users.find(user => String(user.userId) === trimId);
-                         names.push(u ? u.userName : trimId);
+                           if (u) {
+                               const ext = u.extension ? `(${u.extension})` : "";
+                               names.push(u.userName + ext);
+                           } else {
+                               names.push(trimId);
+                           }
                      });
                      if (names.length > 0) {
                          if (names.length <= 4) participantsStr = names.join(', ');
@@ -3843,7 +3857,12 @@ function renderMatrixMonthTimeline(mode, shouldScroll) {
                              const trimId = id.trim();
                              if(!trimId) return;
                              const u = masterData.users.find(user => String(user.userId) === trimId);
-                             names.push(u ? u.userName : trimId);
+                                 if (u) {
+                                     const ext = u.extension ? `(${u.extension})` : "";
+                                     names.push(u.userName + ext);
+                                 } else {
+                                     names.push(trimId);
+                                 }
                          });
                          if (names.length > 0) {
                              if (names.length <= 4) participantsStr = names.join(', ');
