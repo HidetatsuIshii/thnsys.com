@@ -1868,13 +1868,12 @@ function openDetailModal(res) {
   // 日付文字列を安全にパース
   const safeDate = (str) => new Date(String(str).replace(/-/g, '/'));
   
-  // サーバー時刻(UTC)をパースする関数
+  // サーバー時刻をパースする関数
   const parseUtcDate = (str) => {
       if (!str) return null;
-      let s = String(str).trim();
-      s = s.replace(/\//g, '-').replace(' ', 'T');
-      if (!s.endsWith('Z')) s += 'Z'; 
-      return new Date(s);
+      // サーバーからすでに日本時間で来ているため、Zを付けずにそのままパースする
+      // (iPhone/Safariでエラーにならないようハイフンをスラッシュに変換)
+      return new Date(String(str).trim().replace(/-/g, '/'));
   };
 
   // ★修正：週表示から渡された場合は _startTime がないので startTime を使う
