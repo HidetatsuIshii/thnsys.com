@@ -1,75 +1,34 @@
-const CACHE_NAME = 'roompin-cache-v-fix12';
-// ▲▲▲ 変更ここまで ▲▲▲
+// ==========================================================
+// キャッシュ機能を廃止し、プッシュ通知専用にした sw.js
+// ==========================================================
 
-const urlsToCache = [
-    './',
-    './index.html',
-    './style.css',
-    './script.js?v=fix02',
-    './manifest.json',
-    './icon-192-v4.png',   
-    './icon-512-v4.png',
-    './favicon.ico'
-];
-
-// インストール処理
+// インストール処理（即時有効化）
 self.addEventListener('install', (event) => {
-    self.skipWaiting(); // 新しいSWを待機させずに即有効化
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => {
-                return cache.addAll(urlsToCache);
-            })
-    );
+    self.skipWaiting(); 
 });
 
-// アクティブ化処理
+// アクティブ化処理（※過去の憎きキャッシュをここで全消去します！）
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    // 新しいバージョン以外を削除
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
+                    console.log('古いキャッシュを強制消去しました:', cacheName);
+                    return caches.delete(cacheName);
                 })
             );
         })
     );
-    return self.clients.claim(); // ページをすぐにコントロール下に置く
+    return self.clients.claim();
 });
 
-// フェッチ処理（オフライン対応）
-self.addEventListener('fetch', (event) => {
-    // API通信や外部通信はキャッシュせずネットワークへ
-    if (event.request.url.includes('amazonaws.com')) {
-        return;
-    }
+// ※ここに以前あった `fetch` イベント（キャッシュからファイルを返す処理）を
+// 完全に削除したため、今後は常にS3から最新のファイルが読み込まれます！
 
-    event.respondWith(
-        caches.match(event.request).then((response) => {
-            // 1. キャッシュにあればそれを返す
-            if (response) {
-                return response;
-            }
-
-            // 2. キャッシュになくても、ルートへのアクセスなら index.html を返す
-            // (S3などで / にアクセスした際、オフラインでも index.html を表示させるため)
-            const url = new URL(event.request.url);
-            if (url.pathname.endsWith('/') || url.pathname.endsWith('/index.html')) {
-                return caches.match('./index.html');
-            }
-
-            // 3. なければネットワークに取りに行く
-            return fetch(event.request);
-        })
-    );
-});
-
-// プッシュ通知を受け取った時の処理
+// ==========================================================
+// 以下、プッシュ通知の受信機能（そのまま残します）
+// ==========================================================
 self.addEventListener('push', function(event) {
-    // データが空の場合のデフォルト値
     let title = "部屋ピン";
     let body = "更新があります";
     let url = "./index.html";
@@ -79,7 +38,6 @@ self.addEventListener('push', function(event) {
             const json = event.data.json();
             title = json.title || title;
             body = json.body || body;
-            // 通知データにURLが含まれていればそれを使う
             if (json.data && json.data.url) {
                 url = json.data.url;
             } else if (json.url) {
@@ -92,12 +50,10 @@ self.addEventListener('push', function(event) {
 
     const options = {
         body: body,
-        icon: "./icon-192-v4.png", // パスを明示
-        badge: "./icon-192-v4.png", // Androidのステータスバー用
+        icon: "./icon-192-v4.png", 
+        badge: "./icon-192-v4.png",
         vibrate: [100, 50, 100],
-        data: {
-            url: url
-        }
+        data: { url: url }
     };
 
     event.waitUntil(
@@ -105,24 +61,18 @@ self.addEventListener('push', function(event) {
     );
 });
 
-// 通知をクリックした時の処理
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
-    
-    // クリックされたURLを取得
     const targetUrl = event.notification.data.url || './index.html';
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-            // 既に開いているタブがあればフォーカスする
             for (let i = 0; i < clientList.length; i++) {
                 const client = clientList[i];
-                // 同じURL（またはアプリ内）ならフォーカス
                 if (client.url.includes('index.html') && 'focus' in client) {
                     return client.focus();
                 }
             }
-            // 開いていなければ新しく開く
             if (clients.openWindow) {
                 return clients.openWindow(targetUrl);
             }
