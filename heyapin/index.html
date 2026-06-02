@@ -1,22 +1,33 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>部屋ピン</title>
 <link rel="icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=fix02">
-  <link rel="manifest" href="manifest.json">  
-  <link rel="apple-touch-icon" href="icon-192-v4.png">
+<link rel="stylesheet" href="style.css?v=fix73">
+<link rel="manifest" href="manifest.json">  
+<link rel="apple-touch-icon" href="icon-192-v4.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="部屋ピン">
 </head>
 <body>
 
-<div id="loading">
-  <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 10px;">読み込み中...</div>
-  <div id="progress-wrapper" style="display:none; width: 240px; text-align: center;">
+<div id="branch-select-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e50; display: flex; justify-content: center; align-items: center; z-index: 3000; display: none;">
+  <div class="login-box">
+    <h2>拠点を選択してください</h2>
+    <button class="btn-primary" style="margin-bottom: 15px; background-color: #34495e;" onclick="selectBranch('next')">NEXT</button>
+    <button class="btn-primary" style="margin-bottom: 15px; background-color: #34495e;" onclick="selectBranch('oji')">王子</button>
+    <button class="btn-primary" style="margin-bottom: 15px; background-color: #34495e;" onclick="selectBranch('honsya')">本社</button>
+    <button class="btn-primary" style="background-color: #34495e;" onclick="selectBranch('nerima')">練馬</button>
+  </div>
+</div>
+
+<div id="loading" style="display: none;">
+  <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; color: white;">読み込み中...</div>
+  <div id="progress-wrapper" style="display:none; width: 240px; text-align: center; margin: 0 auto;">
     <div style="width: 100%; height: 10px; background-color: rgba(255,255,255,0.3); border-radius: 5px; overflow: hidden; margin-bottom: 5px;">
       <div id="progress-bar" style="width: 0%; height: 100%; background-color: #4caf50; transition: width 0.3s ease;"></div>
     </div>
@@ -24,12 +35,15 @@
   </div>
 </div>
 
-<div id="login-screen">
+<div id="login-screen" style="display: none;">
   <div class="login-box">
     <h2>ログイン</h2>
-    <input type="text" id="loginId" placeholder="ユーザーID">
-    <input type="password" id="loginPass" placeholder="パスワード">
+    <input type="text" id="loginId" placeholder="ユーザーID" onkeydown="if(event.key === 'Enter') tryLogin()">
+    <input type="password" id="loginPass" placeholder="パスワード" onkeydown="if(event.key === 'Enter') tryLogin()">
     <button type="button" class="btn-primary" onclick="tryLogin()">ログイン</button>
+    <div style="margin-top: 15px; font-size: 0.9rem;">
+      <a href="javascript:void(0)" onclick="openUserRegisterModal()" style="color: #3498db; text-decoration: underline;">新規ユーザー登録はこちら</a>
+    </div>
   </div>
 </div>
 
@@ -67,6 +81,10 @@
     <span>📅</span> 履歴
   </div>
 
+  <div class="settings-item" onclick="openReceiveHistoryFromMenu()">
+    <span>📥</span> 受信履歴
+  </div>
+
   <div class="settings-item" onclick="openContactModal()">
     <span>&#9993;</span> お問い合わせ 
   </div>
@@ -78,76 +96,83 @@
       </div>
     </div>
   </header>
-<div id="view-map-view" class="view-container active">
-    <div class="map-wrapper">
-      
-      <div id="return-notification" style="display: none; background: #ff9800; color: #fff; padding: 10px 20px; margin: 0 0 10px 0; cursor: pointer; font-weight: bold; width: 100%; box-sizing: border-box; text-align: center;">
-        <span style="display: inline-block; margin-right: 15px;">🔔 帰社報告が届いています！</span>
-        <span style="display: inline-block; margin-right: 15px;">（大人 <span id="notif-adult" style="font-size:1.2em;">0</span>名 / 子供 <span id="notif-child" style="font-size:1.2em;">0</span>名）</span>
-        <span style="font-size: 0.85em; opacity: 0.9; display: inline-block;">👉 クリックして予約画面を開く</span>
-      </div>
-      <div class="floor-selector">
-          <button class="floor-tab active" onclick="switchFloor(7)" id="tab-7f">7階</button>
-          <button class="floor-tab" onclick="switchFloor(6)" id="tab-6f">6階</button>
-      </div>
-<div id="dual-map-container">
-        <div id="area-7f" class="floor-map-unit active">
-            <div class="map-inner-wrapper">
-                <img id="map-img-7" src="" alt="7階マップ" class="map-image">
-                <div id="overlay-container-7" class="overlay-layer"></div>
-            </div>
-        </div>
 
-        <div id="area-6f" class="floor-map-unit">
-            <div class="map-inner-wrapper">
-                <img id="map-img-6" src="" alt="6階マップ" class="map-image">
-                <div id="overlay-container-6" class="overlay-layer"></div>
-            </div>
-        </div>
-      </div>
-      
-      <div id="map-timeline-section" class="map-timeline-hidden">
-  
-  <div class="sticky-header-wrapper">
-      
-      <div id="timeline-filter-row" class="filter-row-container"></div>
-
-      <div class="date-controller" style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-        <button type="button" onclick="changeDate(-1, 'map-date')" 
-                style="width: 50px !important; min-width: 50px !important; flex: 0 0 50px !important; height: 38px !important; padding: 0 !important; margin: 0 !important;">
-          &lt;
-        </button>
-
-        <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
-            <input type="date" id="map-date" onchange="renderVerticalTimeline('map'); updateDayDisplay('map-date');" 
-                   style="width: 150px !important; height: 38px !important; margin-bottom: 0 !important; font-size: 16px;">
-            <span id="map-date-week" style="font-weight:bold; font-size:1rem; min-width: 30px;"></span>
-        </div>
-
-        <button type="button" onclick="changeDate(1, 'map-date')" 
-                style="width: 50px !important; min-width: 50px !important; flex: 0 0 50px !important; height: 38px !important; padding: 0 !important; margin: 0 !important;">
-          &gt;
-        </button>
-      </div>
-
-      <div id="map-room-headers" class="sticky-room-header-row"></div>
-
-  </div>
-  <div class="calendar-scroll-area">
-      <div class="time-axis-col" id="time-axis-map"><div class="time-axis-header"></div></div>
-      <div class="rooms-container" id="rooms-container-map"></div>
-  </div>
-
-</div>
-
-    </div>
+  <div id="notification-container"></div>
+  <div id="view-map-view" class="view-container active">
+  <div class="map-wrapper">
     
-    <button class="fab-avail-btn" onclick="openAvailabilityModal()">
-      <span>空室</span>
-      <span>確認</span>
-    </button>
-  </div>
+    <div id="dynamic-maps-container" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%;"></div>
+    <div id="map-timeline-section" class="map-timeline-hidden">
+      <div class="sticky-header-wrapper">
+        <div id="timeline-filter-row" class="filter-row-container"></div>
+
+          <div class="calendar-nav-header">
+          <div class="nav-left">
+            </div>
+          
+          <div class="nav-center month-nav-center">
+            <div class="calendar-header-controls">
+              <button type="button" class="btn-nav" onclick="shiftMonth(-1)"> &lt; </button>
+              
+              <label for="map-date" class="month-year-wrapper" onclick="try{ document.getElementById('map-date').showPicker(); }catch(e){}">
+                <span id="display-month-year" class="month-year-text"></span>
+                <span class="month-year-icon">▼</span>
+                <input type="date" id="map-date" class="hidden-date-picker" onchange="renderVerticalTimeline('map'); updateMonthlyCalendar();">
+              </label>
+
+              <button type="button" class="btn-nav" onclick="shiftMonth(1)"> &gt; </button>
+            </div>
+
+            <div id="calendar-grid-container" class="calendar-month-grid"></div>
+          </div>
+          
+          <div class="nav-right" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+            <div class="view-switch">
+              <button class="btn-view active" onclick="switchCalendarView('day', this)">日</button>
+              <button class="btn-view" onclick="switchCalendarView('week', this)">週</button>
+              <button class="btn-view" onclick="switchCalendarView('month', this)">月</button>
+            </div>
+            <div class="sidebar-toggle-group">
+               <button id="btn-toggle-waiting" class="btn-sidebar-toggle" onclick="toggleSidebar('waiting')">待ち案内</button>
+               <button id="btn-toggle-pickup" class="btn-sidebar-toggle" onclick="toggleSidebar('pickup')">迎え案内</button>
+            </div>
+            </div>
+        </div>
+      </div> 
+
+      <div class="timeline-content-wrapper">
+        
+        <div class="timeline-calendar-part">
+          <div id="map-room-headers" class="sticky-room-header-row"></div>
+          <div class="calendar-scroll-area">
+            <div class="time-axis-col" id="time-axis-map"></div>
+            <div class="rooms-container" id="rooms-container-map"></div>
+          </div>
+        </div>
+
+        <div id="timeline-sidebar" class="timeline-sidebar">
+          <div class="sidebar-title-bar">
+            <span id="sidebar-title">待ち案内</span>
+            <span class="close-sidebar-icon" onclick="closeSidebar()">&times;</span>
+          </div>
+          
+          <div id="sidebar-content" class="sidebar-content-area">
+            <div id="sidebar-list-container">
+              <p style="font-size:0.85rem; color:#666; text-align:center; margin-top:20px; margin-bottom:20px;">（※ここにリストが表示されます）</p>
+            </div>
+            
+            <button type="button" class="btn-primary" style="width: 100%; padding: 8px; font-size: 0.85rem;" onclick="openGuestAddModal()">＋ 追加</button>
+          </div>
+        </div>
+
+      </div>
+      </div>
   
+  <button class="fab-avail-btn" onclick="openAvailabilityModal()">
+      <span>空室</span><span>確認</span>
+    </button>
+      </div> 
+    </div> 
   <div id="view-logs" class="view-container">
     <div class="log-wrapper">
       <div class="log-header-area">
@@ -163,8 +188,24 @@
       <div id="log-pagination" class="pagination-container"></div>
     </div>
   </div>
-</div>
-  
+
+  <div id="view-receive-logs" class="view-container">
+    <div class="log-wrapper">
+      <div class="log-header-area">
+          <h3>帰社報告 受信履歴 (最大500件)</h3>
+          <div class="log-search-box">
+              <input type="text" id="receive-log-search-input" placeholder="名前で検索..." oninput="searchReceiveLogs()">
+          </div>
+      </div>
+      <table class="log-table">
+        <thead><tr><th>受信日時</th><th>送信者</th><th>内容</th><th style="text-align:center;">状態</th></tr></thead>
+        <tbody id="receive-log-tbody"></tbody>
+      </table>
+      <div id="receive-log-pagination" class="pagination-container"></div>
+    </div>
+  </div>
+  </div>
+
 <div id="detailModal" class="modal">
   <div class="modal-content modal-sm">
     <div class="detail-header-wrapper">
@@ -184,9 +225,14 @@
       </tr>
     </table>
 
-    <div class="modal-footer">
-      <button type="button" onclick="closeDetailModal()" class="btn-secondary btn-equal">閉じる</button>
-      <button type="button" id="btn-go-edit" class="btn-primary btn-equal">編集する</button>
+    <div class="modal-footer" style="justify-content: flex-end; gap: 10px;">
+      <button type="button" onclick="closeDetailModal()" class="btn-secondary">閉じる</button>
+
+      <button type="button" onclick="openCopyBookingModal()" style="background-color: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer;">
+        📄 コピー作成
+      </button>
+
+      <button type="button" id="btn-go-edit" class="btn-primary">✎ 編集</button>
     </div>
   </div>
 </div>
@@ -199,26 +245,28 @@
     </div>
     <input type="hidden" id="edit-res-id">
     
-    <div class="form-group">
+    <div class="form-row align-end mb-15 compact-row">
+      <div class="flex-1">
         <label>部屋</label>
-        <select id="input-room"></select>
+        <select id="input-room" style="margin-bottom: 0;"></select>
+      </div>
+      <div class="flex-1">
+        <label for="input-date">日付</label>
+        <input type="date" id="input-date" style="margin-bottom: 0;">
+      </div>
     </div>
 
-    <div class="form-row align-end mb-15">
-      <div class="flex-1-2">
-        <label for="input-date">日付</label>
-        <input type="date" id="input-date">
-      </div>
-
+    <div class="form-row align-end mb-15 compact-row">
       <div class="flex-1">
         <label for="input-start">開始</label>
         <div class="time-picker-wrapper">
           <input type="tel" id="input-start" placeholder="09:00" autocomplete="off"
                  onclick="selectTimePart(this)" 
                  onkeyup="handleTimeArrowKeys(event, this)"
-                 onblur="formatTimeInput(this)">
+                 onblur="formatTimeInput(this)"
+                 style="margin-bottom: 0;">
           <div class="time-picker-arrow">▼</div>
-          </div>
+        </div>
       </div>
 
       <div class="time-range-sep">～</div>
@@ -229,14 +277,28 @@
           <input type="tel" id="input-end" placeholder="10:00" autocomplete="off"
                  onclick="selectTimePart(this)" 
                  onkeyup="handleTimeArrowKeys(event, this)"
-                 onblur="formatTimeInput(this)">
+                 onblur="formatTimeInput(this)"
+                 style="margin-bottom: 0;">
           <div class="time-picker-arrow">▼</div>
         </div>
       </div>
     </div>
 
+    <div style="margin-bottom: 15px; background: #fff3e0; padding: 10px; border-radius: 6px; border: 1px dashed #ffb74d;">
+        <label style="display: flex; align-items: center; cursor: pointer; margin-bottom: 0; color: #e65100; font-weight: bold;">
+            <input type="checkbox" id="check-tentative" style="width: 20px !important; height: 20px !important; margin: 0 10px 0 0 !important; cursor: pointer; flex-shrink: 0;">
+            仮予約として登録する（重複を許可）
+        </label>
+        <div style="font-size: 0.8rem; color: #d84315; margin-top: 5px; padding-left: 30px;">
+            ※チェックを入れると、他の予定と時間が重なっていても保存できます。<br>
+            ※仮予約はカレンダー上でグレーのストライプ柄で表示されます。
+        </div>
+    </div>
+
     <label>用件 (タイトル)</label>
-    <input type="text" id="input-title" placeholder="定例会議など">
+    <input type="text" id="input-title" placeholder="定例会議など" oninput="syncTitleTags()">
+
+   <div class="title-tags-container" id="title-tags-area"></div>
 
    <div id="edit-series-option" style="display:none; background:#e8f5e9; padding:10px; border-radius:6px; margin: 10px 0; border:1px solid #c8e6c9;">
         
@@ -301,10 +363,13 @@
     </div>
     <label>参加者設定</label>
     <div class="group-container" id="group-buttons-area"></div>
-    
+
     <div class="shuttle-container">
         <div class="shuttle-box">
             <div class="shuttle-header">候補者一覧</div>
+            
+            <div id="branch-tabs" class="branch-tabs-container">
+                </div>
             <div class="shuttle-search">
                 <input type="text" placeholder="名前検索..." id="shuttle-search-input" oninput="renderShuttleLists(this.value)">
             </div>
@@ -367,8 +432,8 @@
     </div>
 
     <div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px;">
+      
       <div class="avail-search-row">
-        
         <div class="avail-input-group">
           <label>日付</label>
           <input type="date" id="avail-date">
@@ -399,8 +464,12 @@
               </div>
             </div>
         </div>
+      </div>
+      
+      <div class="avail-search-action">
         <button class="btn-primary btn-search-avail" onclick="execAvailabilitySearch()">検索</button>
       </div>
+
     </div>
 
     <div id="avail-result-container" style="overflow-y:auto; flex:1; border-top:1px solid #eee;"></div>
@@ -455,6 +524,88 @@
   </div>
 </div>
 
-<script src="script.js?v=fix01"></script>
+<div id="tagColorSettingModal" class="modal">
+  <div class="modal-content modal-md">
+    <div class="modal-top-bar">
+      <h3>用件キーワードの色設定</h3>
+      <span class="close-icon" onclick="closeTagColorSettingModal()">&times;</span>
+    </div>
+    
+    <p style="font-size:0.85rem; color:#666; margin-bottom:15px;">
+      用件（タイトル）に特定のキーワードが含まれている時、予約ブロックのフチと背景色を自動で変更します。
+    </p>
+
+    <label>用件名（キーワード）</label>
+    <input type="text" id="input-new-color-tag-name" placeholder="例: 契約、来客、外出 など">
+
+    <label style="margin-top: 15px;">色の選択</label>
+    <div id="tag-color-palette" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+      </div>
+    
+    <div class="modal-footer justify-end" style="border-top: 1px solid #eee; padding-top: 10px; margin-top: 15px;">
+      <button type="button" class="btn-secondary" onclick="closeTagColorSettingModal()">キャンセル</button>
+      <button type="button" class="btn-primary" onclick="saveNewTagWithColor()">登録する</button>
+    </div>
+
+  </div>
+</div>
+
+<div id="guestAddModal" class="modal">
+  <div class="modal-content modal-md">
+    <div class="modal-top-bar">
+      <h3 id="guest-modal-title">案内を追加</h3>
+      <span class="close-icon" onclick="closeGuestAddModal()">&times;</span>
+    </div>
+    
+    <label>お客様の名前</label>
+    <input type="text" id="guest-name-input" placeholder="例: 山田 様">
+    
+    <label>何時から</label>
+    <div class="time-picker-wrapper" style="width: 120px; margin-bottom: 15px;">
+      <input type="text" id="guest-time-input" placeholder="10:00" onblur="formatTimeInput(this)" onkeydown="handleTimeArrowKeys(event, this)" onclick="selectTimePart(this)">
+      <span class="time-picker-arrow">▼</span>
+    </div>
+
+    <label>担当営業名（直接入力・または下から選択）</label>
+    <input type="text" id="guest-reps-input" placeholder="例: 佐藤、鈴木">
+
+    <div class="shuttle-box guest-shuttle-box" style="margin-top: 5px;">
+      <div class="shuttle-header">候補者一覧（練馬）</div>
+      <div class="shuttle-search" style="padding: 5px; background: #fff; border-bottom: 1px solid #ddd;">
+          <input type="text" id="guest-shuttle-search" placeholder="名前で検索..." oninput="renderGuestShuttle()" style="margin: 0;">
+      </div>
+      <div class="shuttle-list guest-shuttle-list" id="guest-candidates"></div>
+    </div>
+
+    <div class="modal-footer" style="margin-top: 20px;">
+      <button type="button" class="btn-secondary" onclick="closeGuestAddModal()">キャンセル</button>
+      <button type="button" class="btn-primary" onclick="saveGuestEntry()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<div id="userRegisterModal" class="modal">
+  <div class="modal-content modal-sm">
+    <div class="modal-top-bar">
+      <h3>新規ユーザー登録</h3>
+      <span class="close-icon" onclick="closeUserRegisterModal()">&times;</span>
+    </div>
+    
+    <label>お名前（表示名）</label>
+    <input type="text" id="reg-username" placeholder="例: 山田 太郎">
+
+    <label>ログインID（メールアドレス等）</label>
+    <input type="text" id="reg-loginid" placeholder="例: yamada@toho-next.com">
+
+    <label>パスワード</label>
+    <input type="password" id="reg-password" placeholder="パスワード（半角英数）">
+
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="closeUserRegisterModal()">キャンセル</button>
+      <button type="button" class="btn-primary" onclick="registerNewUser()">登録する</button>
+    </div>
+  </div>
+</div>
+<script src="script.js?v=fix116"></script>
 </body>
 </html>
