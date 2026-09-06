@@ -491,8 +491,8 @@ function logout() {
   // これにより、別の拠点でログインしているセッションは維持される設計になっています。
   localStorage.removeItem(SESSION_KEY_USER);
   localStorage.removeItem(SESSION_KEY_TIME);
-  // ログアウト後は、URLのパスを初期化（/）して拠点選択画面に強制的に戻します。
-  window.location.href = '/'; 
+  // ログアウト後は、URLのパスを初期化（/heyapin/）して拠点選択画面に強制的に戻します。
+  window.location.href = '/heyapin/'; 
 }
 
 async function loadAllData(isUpdate = false, isBackground = false) {
@@ -1412,7 +1412,7 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
         // ドラッグ中の表示許可
         body.ondragover = (e) => {
             e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
+            e.dataTransfer.dropEffect = 'move'; // ★ 'copy' から 'move' に変更
         };
 
         // ドロップされた時の処理（案内データの引き継ぎ ＋ 既存予約の移動）
@@ -4930,21 +4930,25 @@ async function deleteTitleTag(tagId, tagName, btn) {
 let draggedResId = null;
 let dragOffsetY = 0; // ★追加：枠の一番上からマウスまでの「ズレ」を記憶する変数
 
+// ▼▼▼ 修正後 ▼▼▼
 function handleDragStart(e) {
     draggedResId = this.dataset.resId;
-    
-    // ▼▼▼ 追加：枠の一番上からマウスがどれくらい下にあるかを計算・記憶 ▼▼▼
     const rect = this.getBoundingClientRect();
     dragOffsetY = e.clientY - rect.top;
-    // ▲▲▲ 追加ここまで ▲▲▲
 
-    e.dataTransfer.effectAllowed = 'move';
-    // ドラッグ中の要素を半透明にする
-    setTimeout(() => this.style.opacity = '0.5', 0);
+    e.dataTransfer.effectAllowed = 'copyMove'; // ★修正
+    e.dataTransfer.setData('text/plain', this.dataset.resId); 
+    
+    // ★修正：半透明にしつつ、奥のマスへドロップできるようにマウス判定を消す
+    setTimeout(() => {
+        this.style.opacity = '0.5';
+        this.style.pointerEvents = 'none'; 
+    }, 0);
 }
 
 function handleDragEnd(e) {
     this.style.opacity = '1';
+    this.style.pointerEvents = 'auto'; // ★追加：ドロップ後にクリック判定を元に戻す
     draggedResId = null;
 }
 
@@ -5031,14 +5035,16 @@ async function handleDropOnMatrix(e) {
     if (!targetSlot) return;
     const roomId = targetSlot.dataset.roomId;
     const dateStr = targetSlot.dataset.dateStr;
-    const res = masterData.reservations.find(r => r.id === draggedResId);
+    // ★追加: String() で囲って確実に予約データを見つける
+    const res = masterData.reservations.find(r => String(r.id) === String(draggedResId));
     if (!res) return;
     const oldStart = new Date(res._startTime || res.startTime);
     await execDragAndDropUpdate(draggedResId, roomId, dateStr, oldStart.getHours(), oldStart.getMinutes());
 }
 // 共通：更新APIの実行
 async function execDragAndDropUpdate(resId, newRoomId, newDateStr, newHour, newMin) {
-    const res = masterData.reservations.find(r => r.id === resId);
+    // ★追加: String() で囲って、文字として完全に一致させる
+    const res = masterData.reservations.find(r => String(r.id) === String(resId));
     if (!res) return;
 
     const oldStart = new Date(res._startTime || res.startTime);
@@ -5543,7 +5549,13 @@ async function saveGuestEntry() {
     const name = document.getElementById('guest-name-input').value.trim();
     const time = document.getElementById('guest-time-input').value.trim();
     const repNames = document.getElementById('guest-reps-input').value.trim();
-    const targetDate = document.getElementById('map-date') ? document.getElementById('map-date').value : ''; 
+    let targetDate = document.getElementById('map-date') ? document.getElementById('map-date').value : ''; 
+    
+    // ★追加：もし日付が空だったら今日の日付を自動セットする
+    if (!targetDate) {
+        const now = new Date();
+        targetDate = `${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-${('0' + now.getDate()).slice(-2)}`;
+    }
     
     if (!name || !time) {
         alert("お客様の名前と時間を入力してください");
