@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>部屋ピン</title>
 <link rel="icon" href="favicon.ico">
-<link rel="stylesheet" href="/heyapin/style.css?v=fix73">
+<link rel="stylesheet" href="/heyapin/style.css?v=fix74">
 <link rel="manifest" href="/heyapin/manifest.json"> 
 <link rel="apple-touch-icon" href="/heyapin/icon-192-v4.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -594,11 +594,17 @@
     <label>お名前（表示名）</label>
     <input type="text" id="reg-username" placeholder="例: 山田 太郎">
 
+    <label>よみがな</label>
+    <input type="text" id="reg-kana" placeholder="例: やまだ たろう">
+
     <label>ログインID（メールアドレス等）</label>
     <input type="text" id="reg-loginid" placeholder="例: yamada@toho-next.com">
 
     <label>パスワード</label>
     <input type="password" id="reg-password" placeholder="パスワード（半角英数）">
+
+    <label>内線番号（任意）</label>
+    <input type="text" id="reg-extension" placeholder="例: 123">
 
     <div class="modal-footer">
       <button type="button" class="btn-secondary" onclick="closeUserRegisterModal()">キャンセル</button>
@@ -606,6 +612,6 @@
     </div>
   </div>
 </div>
-<script src="/heyapin/script.js?v=fix116"></script>
+<script src="/heyapin/script.js?v=fix122"></script>
 </body>
 </html>
