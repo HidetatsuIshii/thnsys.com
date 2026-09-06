@@ -5988,8 +5988,10 @@ setInterval(() => {
    ============================================== */
 function openUserRegisterModal() {
     document.getElementById('reg-username').value = '';
+    document.getElementById('reg-kana').value = '';
     document.getElementById('reg-loginid').value = '';
     document.getElementById('reg-password').value = '';
+    document.getElementById('reg-extension').value = '';
     document.getElementById('userRegisterModal').style.display = 'flex';
 }
 
@@ -5999,22 +6001,26 @@ function closeUserRegisterModal() {
 
 async function registerNewUser() {
     const userName = document.getElementById('reg-username').value.trim();
+    const kana = document.getElementById('reg-kana').value.trim();
     const loginId = document.getElementById('reg-loginid').value.trim();
     const password = document.getElementById('reg-password').value.trim();
+    const extension = document.getElementById('reg-extension').value.trim();
 
-    if (!userName || !loginId || !password) {
-        alert("すべての項目を入力してください。");
+    // 内線番号は任意なのでチェックから外します
+    if (!userName || !kana || !loginId || !password) {
+        alert("お名前、よみがな、ログインID、パスワードを入力してください。");
         return;
     }
 
     document.getElementById('loading').style.display = 'flex';
 
-    // どの拠点を開いているかの情報を自動で添えて送信
     const params = {
         action: 'registerUser',
         userName: userName,
+        kana: kana,
         loginId: loginId,
         password: password,
+        extension: extension,
         branchId: currentBranchId 
     };
 
