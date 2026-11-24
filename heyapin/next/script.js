@@ -2,7 +2,7 @@
    1. 定数定義 & 設定
    ============================================== */
 // API（バックエンド）の接続先URLです。GAS（Google Apps Script）やAWS Lambdaなどのエンドポイントを指定し、ここで全てのデータ通信を行います。
-const API_URL = "https://pa9nxrwffc.execute-api.ap-northeast-1.amazonaws.com/default/heyapin-main";
+const API_URL = "https://q9301n74ai.execute-api.ap-northeast-1.amazonaws.com/default"; // ※コピーしたURLを貼り付けてください
 
 // 現在のURLパスから、今どの拠点（ブランチ）のページにいるのかを特定します。
 // 'heyapin' などの不要なパスを除外し、何もない場合は 'default' として扱います。
@@ -491,8 +491,8 @@ function logout() {
   // これにより、別の拠点でログインしているセッションは維持される設計になっています。
   localStorage.removeItem(SESSION_KEY_USER);
   localStorage.removeItem(SESSION_KEY_TIME);
-  // ログアウト後は、URLのパスを初期化（/heyapin/）して拠点選択画面に強制的に戻します。
-  window.location.href = '/heyapin/'; 
+  // ログアウト後は、URLのパスを初期化（/）して拠点選択画面に強制的に戻します。
+  window.location.href = '/'; 
 }
 
 async function loadAllData(isUpdate = false, isBackground = false) {
@@ -1412,7 +1412,7 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
         // ドラッグ中の表示許可
         body.ondragover = (e) => {
             e.preventDefault();
-            e.dataTransfer.dropEffect = 'move'; // ★ 'copy' から 'move' に変更
+            e.dataTransfer.dropEffect = 'copy';
         };
 
         // ドロップされた時の処理（案内データの引き継ぎ ＋ 既存予約の移動）
@@ -4930,25 +4930,21 @@ async function deleteTitleTag(tagId, tagName, btn) {
 let draggedResId = null;
 let dragOffsetY = 0; // ★追加：枠の一番上からマウスまでの「ズレ」を記憶する変数
 
-// ▼▼▼ 修正後 ▼▼▼
 function handleDragStart(e) {
     draggedResId = this.dataset.resId;
+    
+    // ▼▼▼ 追加：枠の一番上からマウスがどれくらい下にあるかを計算・記憶 ▼▼▼
     const rect = this.getBoundingClientRect();
     dragOffsetY = e.clientY - rect.top;
+    // ▲▲▲ 追加ここまで ▲▲▲
 
-    e.dataTransfer.effectAllowed = 'copyMove'; // ★修正
-    e.dataTransfer.setData('text/plain', this.dataset.resId); 
-    
-    // ★修正：半透明にしつつ、奥のマスへドロップできるようにマウス判定を消す
-    setTimeout(() => {
-        this.style.opacity = '0.5';
-        this.style.pointerEvents = 'none'; 
-    }, 0);
+    e.dataTransfer.effectAllowed = 'move';
+    // ドラッグ中の要素を半透明にする
+    setTimeout(() => this.style.opacity = '0.5', 0);
 }
 
 function handleDragEnd(e) {
     this.style.opacity = '1';
-    this.style.pointerEvents = 'auto'; // ★追加：ドロップ後にクリック判定を元に戻す
     draggedResId = null;
 }
 
@@ -5035,16 +5031,14 @@ async function handleDropOnMatrix(e) {
     if (!targetSlot) return;
     const roomId = targetSlot.dataset.roomId;
     const dateStr = targetSlot.dataset.dateStr;
-    // ★追加: String() で囲って確実に予約データを見つける
-    const res = masterData.reservations.find(r => String(r.id) === String(draggedResId));
+    const res = masterData.reservations.find(r => r.id === draggedResId);
     if (!res) return;
     const oldStart = new Date(res._startTime || res.startTime);
     await execDragAndDropUpdate(draggedResId, roomId, dateStr, oldStart.getHours(), oldStart.getMinutes());
 }
 // 共通：更新APIの実行
 async function execDragAndDropUpdate(resId, newRoomId, newDateStr, newHour, newMin) {
-    // ★追加: String() で囲って、文字として完全に一致させる
-    const res = masterData.reservations.find(r => String(r.id) === String(resId));
+    const res = masterData.reservations.find(r => r.id === resId);
     if (!res) return;
 
     const oldStart = new Date(res._startTime || res.startTime);
@@ -5988,10 +5982,8 @@ setInterval(() => {
    ============================================== */
 function openUserRegisterModal() {
     document.getElementById('reg-username').value = '';
-    document.getElementById('reg-kana').value = '';
     document.getElementById('reg-loginid').value = '';
     document.getElementById('reg-password').value = '';
-    document.getElementById('reg-extension').value = '';
     document.getElementById('userRegisterModal').style.display = 'flex';
 }
 
@@ -6001,26 +5993,22 @@ function closeUserRegisterModal() {
 
 async function registerNewUser() {
     const userName = document.getElementById('reg-username').value.trim();
-    const kana = document.getElementById('reg-kana').value.trim();
     const loginId = document.getElementById('reg-loginid').value.trim();
     const password = document.getElementById('reg-password').value.trim();
-    const extension = document.getElementById('reg-extension').value.trim();
 
-    // 内線番号は任意なのでチェックから外します
-    if (!userName || !kana || !loginId || !password) {
-        alert("お名前、よみがな、ログインID、パスワードを入力してください。");
+    if (!userName || !loginId || !password) {
+        alert("すべての項目を入力してください。");
         return;
     }
 
     document.getElementById('loading').style.display = 'flex';
 
+    // どの拠点を開いているかの情報を自動で添えて送信
     const params = {
         action: 'registerUser',
         userName: userName,
-        kana: kana,
         loginId: loginId,
         password: password,
-        extension: extension,
         branchId: currentBranchId 
     };
 
