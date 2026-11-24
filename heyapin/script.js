@@ -1379,8 +1379,8 @@ function renderVerticalTimeline(mode, shouldScroll = false) {
             stickyHeader.className = 'sticky-header-item'; 
             stickyHeader.innerText = col.title;
             
-            // ★追加：ヘッダー側もCSSの!importantに打ち勝つように設定
-            stickyHeader.style.setProperty('max-width', `calc(100% / ${totalRoomCount})`, 'important');
+            // ★修正：左端の時間軸(50px)を引いた幅で計算し、下の列と幅を完全に一致させる
+            stickyHeader.style.setProperty('max-width', `calc((100% - 50px) / ${totalRoomCount})`, 'important');
 
             if (col.isHighlight) {
                 stickyHeader.style.backgroundColor = '#fff9c4';
