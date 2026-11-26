@@ -2001,6 +2001,24 @@ async function saveBooking() {
         return;
     }
 
+    // --- 過去日時チェック（昨日以前はブロック、今日の過ぎた時間は確認） ---
+    const now = new Date();
+    const selectedStart = new Date(`${date.replace(/-/g, '/')} ${start}:00`);
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const selectedDateOnly = new Date(selectedStart.getFullYear(), selectedStart.getMonth(), selectedStart.getDate());
+
+    const selStr = `${selectedStart.getMonth() + 1}/${selectedStart.getDate()} ${pad(selectedStart.getHours())}:${pad(selectedStart.getMinutes())}`;
+    const nowStr = `${now.getMonth() + 1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+    if (selectedDateOnly < todayStart) {
+        alert(`過去の日時では予約できません。\n選択中：${selStr}\n現在 ：${nowStr}\nカレンダーを今日の日付に更新してから再度お試しください。`);
+        return;
+    } else if (selectedStart < now) {
+        if (!confirm(`現在時刻より前の時間ですが、このまま登録しますか？\n選択中：${selStr}\n現在 ：${nowStr}`)) {
+            return;
+        }
+    }
+
     // --- 予約データの生成 ---
     let reservationList = []; 
     const pIds = Array.from(selectedParticipantIds).join(', ');
